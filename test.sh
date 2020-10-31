@@ -28,7 +28,7 @@ assert 6 '+10-+4'
 assert 6 '+10+-4'
 assert 20 '-20+40'
 assert 20 '- -20'
-assert 10 '- - - -10'
+assert 10 '----10'
 
 assert 0 '0==1'
 assert 1 '10==10'
