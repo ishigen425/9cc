@@ -6,8 +6,8 @@
 #include <string.h>
 #include "9cc.h"
 
-Token *token;
-char *user_input;
+static Token *token;
+static char *user_input;
 
 void error_at(char *loc, char *fmt, ...) {
     va_list ap;
