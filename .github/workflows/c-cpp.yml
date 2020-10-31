@@ -16,5 +16,4 @@ jobs:
     - name: make
       run: make
     - name: test
-      run: bash test.sh
-    
+      run: make test
