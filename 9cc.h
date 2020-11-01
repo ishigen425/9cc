@@ -12,6 +12,7 @@ typedef enum {
     ND_ASSIGN,
     ND_LVAR,
     ND_RETURN,
+    ND_WHILE,
 } NodeKind;
 
 typedef struct Node Node;
@@ -30,6 +31,7 @@ typedef enum {
     TK_INDENT,   // 識別子
     TK_NUM,      // 整数トークン
     TK_RETURN,   // return
+    TK_WHILE,    // while
     TK_EOF,      // 入力の終わり
 } TokenKind;
 

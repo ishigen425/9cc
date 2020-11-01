@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "9cc.h"
 
+int labelidx = 0;
+
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR)
         error("代入の左辺値が変数ではありません");
@@ -10,6 +12,8 @@ void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+    int lbegin = labelidx;
+    int lend = labelidx++;
     switch (node->kind) {
     case ND_NUM:
         printf("    push %d\n", node->val);
@@ -35,6 +39,16 @@ void gen(Node *node) {
         printf("    mov rsp, rbp\n");
         printf("    pop rbp\n");
         printf("    ret\n");
+        return;
+    case ND_WHILE:
+        printf(".Lbegin%d:\n", lbegin);
+        gen(node->lhs);
+        printf("    pop rax\n");
+        printf("    cmp rax, 0\n");
+        printf("    je .Lend%d\n", lend);
+        gen(node->rhs);
+        printf("    jmp .Lbegin%d\n", lbegin);
+        printf(".Lend%d:\n", lend);
         return;
     }
 

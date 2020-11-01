@@ -105,6 +105,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "while ") || startswith(p, "while(")){
+            cur = new_token(TK_WHILE, cur, p, 5);
+            p += 5;
+            continue;
+        }
+
         if (startswith(p, "return ")) {
             cur = new_token(TK_RETURN, cur, p, 6);
             p += 6;
@@ -177,15 +183,25 @@ Node *assign() {
 Node *stmt() {
     Node *node;
 
-    if (consume_kind(TK_RETURN)) {
+    if (consume_kind(TK_WHILE)){
+        expect("(");
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_WHILE;
+        node->lhs = expr();
+        expect(")");
+        node->rhs = stmt();
+        return node;
+    } else if (consume_kind(TK_RETURN)) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();
+        expect(";");
+        return node;
     } else {
         node = expr();
+        expect(";");
+        return node;
     }
-    expect(";");
-    return node;
 }
 
 void program() {

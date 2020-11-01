@@ -60,6 +60,11 @@ assert 6 'foo=1;bar=2+3;foo+bar;'
 assert 6 'foo=1;bar=2+3;return foo+bar;'
 assert 6 'foo=0;bar=2*3;return foo+bar;'
 assert 2 'returnx=1;returnx*2;'
+assert 2 'aa=1;aa=aa+1;aa;'
 
+assert 1 'a=0;while(a==0)a=a+1;a;'
+assert 11 'a=0;while(a<=10)a=a+1;a+0;'
+assert 18 'a=-3;while(a<16)a=a+7;a;'
+assert 1 'a=5;while ( a > 1 ) a = a-1;a;'
 echo OK
 
