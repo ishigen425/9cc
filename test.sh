@@ -53,5 +53,9 @@ assert 2 'x=1;1+x;'
 assert 2 'y=1;1+y;'
 assert 2 'z=1;1+z;'
 
+assert 3 'abc=3;abc+0;'
+assert 20 'test=10;test+test;'
+assert 6 'foo=1;bar=2+3;foo+bar;'
+
 echo OK
 
