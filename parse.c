@@ -20,6 +20,14 @@ bool consume(char *op) {
     return true;
 }
 
+bool consume_kind(TokenKind kind) {
+    if (token->kind == kind) {
+        token = token->next;
+        return true;
+    }
+    return false;
+}
+
 Token *consume_indent() {
     if (token->kind == TK_INDENT){
         Token *now = token;
@@ -28,6 +36,10 @@ Token *consume_indent() {
     }
     return NULL;
 }
+
+ bool startswith(char *p, char *q) {
+    return memcmp(p, q, strlen(q)) == 0;
+ }
 
 LVar *find_lvar(Token *tok) {
     for (LVar *var = locals; var ; var = var->next) {
@@ -53,6 +65,13 @@ int expect_number() {
     return val;
 }
 
+int is_alnum(char c) {
+    return ('a' <= c && c <= 'z') ||
+            ('A' <= c && c <= 'Z') ||
+            ('0' <= c && c <= '9') ||
+            (c == '_');
+}
+
 bool at_eof() {
     return token->kind == TK_EOF;
 }
@@ -64,10 +83,6 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
     tok->len = len;
     cur->next = tok;
     return tok;
- }
-
- bool startswith(char *p, char *q) {
-    return memcmp(p, q, strlen(q)) == 0;
  }
 
  void tokenize(char *p) {
@@ -87,6 +102,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             startswith(p, "<=") || startswith(p, ">=")) {
             cur = new_token(TK_RESERVED, cur, p, 2);
             p += 2;
+            continue;
+        }
+
+        if (startswith(p, "return ")) {
+            cur = new_token(TK_RETURN, cur, p, 6);
+            p += 6;
             continue;
         }
 
@@ -154,9 +175,16 @@ Node *assign() {
 }
 
 Node *stmt() {
-    Node *node = expr();
-    if (!at_eof())
-        expect(";");
+    Node *node;
+
+    if (consume_kind(TK_RETURN)) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_RETURN;
+        node->lhs = expr();
+    } else {
+        node = expr();
+    }
+    expect(";");
     return node;
 }
 
