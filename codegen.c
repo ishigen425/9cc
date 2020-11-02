@@ -13,6 +13,7 @@ void gen_lval(Node *node) {
 
 void gen(Node *node) {
     int lidx = labelidx++;
+    Node *child = node->child;
     switch (node->kind) {
     case ND_NUM:
         printf("    push %d\n", node->val);
@@ -88,6 +89,13 @@ void gen(Node *node) {
         }
         printf("    jmp .Lbegin%d\n", lidx);
         printf(".Lend%d:\n", lidx);
+        return;
+    case ND_BLOCK:
+        while (child->lhs != NULL) {
+            gen(child->lhs);
+            printf("    pop rax\n");
+            child = child->child;
+        }
         return;
     }
 

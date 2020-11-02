@@ -135,7 +135,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
-        if (strchr("+-*/)(<>=;", *p)) {
+        if (strchr("+-*/)(<>=;{}", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
@@ -198,10 +198,22 @@ Node *assign() {
     return node;
 }
 
+Node *child;
+
 Node *stmt() {
     Node *node;
-
-    if (consume_kind(TK_FOR)) {
+    if (consume("{")) {
+        node = calloc(1, sizeof(Node));
+        node->child = calloc(1, sizeof(Node));
+        node->kind = ND_BLOCK;
+        child = node->child;
+        while (!consume("}")) {
+            child->lhs = stmt();
+            child->child = calloc(1, sizeof(Node));
+            child = child->child;
+        }
+        return node;
+    } else if (consume_kind(TK_FOR)) {
         expect("(");
         node = calloc(1, sizeof(Node));
         node->kind = ND_FOR;
@@ -218,6 +230,7 @@ Node *stmt() {
             expect(")");
         }
         node->lhs = stmt();
+        return node;
     }else if (consume_kind(TK_IF)) {
         expect("(");
         node = calloc(1, sizeof(Node));

@@ -82,5 +82,9 @@ assert 1 'c=0;for(c=0;c<10;c=c+1)d=1;d;'
 assert 0 'd=10;for(;d>0;d=d-1)d;'
 assert 0 'd=10;for(e=1;d>0;d=d-1)d;'
 
+assert 10 'a=1;d=0;if(a==1){a=2;d=10;}d;'
+assert 16 'a=0;d=1;while(a<4){a=a+1;d=d*2;}d;'
+assert 32 'a=0;d=1;for(a=0;a<5;a=a+0){a=a+1;d=d*2;}d;'
+
 echo OK
 

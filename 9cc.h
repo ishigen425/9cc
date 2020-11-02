@@ -17,6 +17,7 @@ typedef enum {
     ND_IF_ELSE,
     ND_ELSE,
     ND_FOR,
+    ND_BLOCK,
 } NodeKind;
 
 typedef struct Node Node;
@@ -29,6 +30,7 @@ struct Node {
     Node *initstmt; // for文での初期化式
     Node *testexpr; // for文での条件式
     Node *updstmt;  // for文での変化式
+    Node *child;    // ブロックで使う
     int val;        // kindがND_NUMの場合のみ使う
     int offset;     // kindがND_LVARの場合のみ使う
 };
