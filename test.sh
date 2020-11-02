@@ -66,5 +66,16 @@ assert 1 'a=0;while(a==0)a=a+1;a;'
 assert 11 'a=0;while(a<=10)a=a+1;a+0;'
 assert 18 'a=-3;while(a<16)a=a+7;a;'
 assert 1 'a=5;while ( a > 1 ) a = a-1;a;'
+assert 1 'a=1;while(a<1)a=2;a;'
+
+assert 2 'a=1;if(a==1)a=2;a;'
+assert 2 'a=1;if(a<=1)a=2;a;'
+assert 1 'a=1;if(10<1)a=2;a;'
+assert 1 'a=1;if(a>1)a=2;a;'
+
+assert 2 'a=1;if(a==1)a=2;else a=3;a;'
+assert 3 'a=1;if(a!=1)a=2;else a=3;a;'
+assert 10 'b=3;while(b<6)b=b+1;if(b>=5)b=10;b;'
+
 echo OK
 

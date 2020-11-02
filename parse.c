@@ -105,6 +105,18 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "if ") || startswith(p, "if(")) {
+            cur = new_token(TK_IF, cur, p, 2);
+            p += 2;
+            continue;
+        }
+
+        if (startswith(p, "else ")) {
+            cur = new_token(TK_ELSE, cur, p, 4);
+            p += 4;
+            continue;
+        }
+
         if (startswith(p, "while ") || startswith(p, "while(")){
             cur = new_token(TK_WHILE, cur, p, 5);
             p += 5;
@@ -183,7 +195,23 @@ Node *assign() {
 Node *stmt() {
     Node *node;
 
-    if (consume_kind(TK_WHILE)){
+    if (consume_kind(TK_IF)) {
+        expect("(");
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_IF;
+        node->lhs = expr();
+        expect(")");
+        node->rhs = stmt();
+        // else文があるかを判定する
+        if (consume_kind(TK_ELSE)) {
+            node->kind = ND_IF_ELSE;
+            Node *elsenode = calloc(1, sizeof(Node));
+            elsenode->kind = ND_ELSE;
+            elsenode->lhs = stmt();
+            node->elsehs = elsenode;
+        }
+        return node;
+    } else if (consume_kind(TK_WHILE)){
         expect("(");
         node = calloc(1, sizeof(Node));
         node->kind = ND_WHILE;
