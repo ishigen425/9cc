@@ -77,5 +77,11 @@ assert 2 'a=1;if(a==1)a=2;else a=3;a;'
 assert 3 'a=1;if(a!=1)a=2;else a=3;a;'
 assert 10 'b=3;while(b<6)b=b+1;if(b>=5)b=10;b;'
 
+assert 10 'c=0;for(c=0;c<10;c=c+1)d=1;c;'
+assert 1 'c=0;for(c=0;c<10;c=c+1)d=1;d;'
+assert 0 'd=0;for(;d>0;)d;'
+assert 0 'd=10;for(;d>0;d=d-1)d;'
+assert 0 'd=10;for(e=1;d>0;d=d-1)d;'
+
 echo OK
 

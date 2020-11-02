@@ -16,6 +16,7 @@ typedef enum {
     ND_IF,
     ND_IF_ELSE,
     ND_ELSE,
+    ND_FOR,
 } NodeKind;
 
 typedef struct Node Node;
@@ -24,9 +25,12 @@ struct Node {
     NodeKind kind;
     Node *lhs;
     Node *rhs;
-    Node *elsehs;// else文のときのノード
-    int val;    // kindがND_NUMの場合のみ使う
-    int offset; // kindがND_LVARの場合のみ使う
+    Node *elsehs;   // else文での実行式
+    Node *initstmt; // for文での初期化式
+    Node *testexpr; // for文での条件式
+    Node *updstmt;  // for文での変化式
+    int val;        // kindがND_NUMの場合のみ使う
+    int offset;     // kindがND_LVARの場合のみ使う
 };
 
 // トークンの種類
@@ -38,6 +42,7 @@ typedef enum {
     TK_WHILE,    // while
     TK_IF,       // if
     TK_ELSE,     // else
+    TK_FOR,      // for
     TK_EOF,      // 入力の終わり
 } TokenKind;
 
@@ -71,6 +76,7 @@ Node *primary();
 
 void error(char *fmt, ... );
 void error_at(char *loc, char *fmt, char *user_input, ...);
+void debug_print(char *fmt, ... );
 
 void gen(Node *node);
 void program();

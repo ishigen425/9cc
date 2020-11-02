@@ -27,3 +27,10 @@ void error_at(char *loc, char *user_input, char *fmt, ...) {
     fprintf(stderr, "\n");
     exit(1);
 }
+
+void debug_print(char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+}

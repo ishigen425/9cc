@@ -105,6 +105,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "for ") || startswith(p, "for(")) {
+            cur = new_token(TK_FOR, cur, p, 3);
+            p += 3;
+            continue;
+        }
+
         if (startswith(p, "if ") || startswith(p, "if(")) {
             cur = new_token(TK_IF, cur, p, 2);
             p += 2;
@@ -195,7 +201,24 @@ Node *assign() {
 Node *stmt() {
     Node *node;
 
-    if (consume_kind(TK_IF)) {
+    if (consume_kind(TK_FOR)) {
+        expect("(");
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_FOR;
+        if(!consume(";")){
+            node->initstmt = expr();
+            expect(";");
+        }
+        if(!consume(";")){
+            node->testexpr = expr();
+            expect(";");
+        }
+        if(!consume(")")){
+            node->updstmt = expr();
+            expect(")");
+        }
+        node->lhs = stmt();
+    }else if (consume_kind(TK_IF)) {
         expect("(");
         node = calloc(1, sizeof(Node));
         node->kind = ND_IF;

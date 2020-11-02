@@ -68,6 +68,27 @@ void gen(Node *node) {
         gen(node->rhs);
         printf(".Lend%d:\n", lidx);
         return;
+    case ND_FOR:
+        if (node->initstmt != NULL) {
+            gen(node->initstmt);
+        }
+        printf(".Lbegin%d:\n", lidx);
+        if (node->testexpr != NULL) {
+            gen(node->testexpr);
+        } else {
+            // 条件式が未定義の場合は常にfor文の中の処理を実行させる？
+            printf("    push 1\n");
+        }
+        printf("    pop rax\n");
+        printf("    cmp rax, 0\n");
+        printf("    je .Lend%d\n", lidx);
+        gen(node->lhs);
+        if (node->updstmt != NULL) {
+            gen(node->updstmt);
+        }
+        printf("    jmp .Lbegin%d\n", lidx);
+        printf(".Lend%d:\n", lidx);
+        return;
     }
 
     gen(node->lhs);
