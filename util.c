@@ -34,3 +34,12 @@ void debug_print(char *fmt, ...) {
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
 }
+
+int mysubstr( char *t, char *s, int pos, int len ) {
+    if( pos < 0 || len < 0 || len > strlen(s) )
+        return -1;
+    for( s += pos; *s != '\0' && len > 0; len-- )
+        *t++ = *s++;
+    *t = '\0';
+    return 0;
+}

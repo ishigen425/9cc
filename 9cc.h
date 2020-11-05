@@ -18,6 +18,7 @@ typedef enum {
     ND_ELSE,
     ND_FOR,
     ND_BLOCK,
+    ND_FUNCALL, // 関数呼び出し
 } NodeKind;
 
 typedef struct Node Node;
@@ -33,6 +34,8 @@ struct Node {
     Node *child;    // ブロックで使う
     int val;        // kindがND_NUMの場合のみ使う
     int offset;     // kindがND_LVARの場合のみ使う
+    char *name;     // kindがND_DEF_FUNCTIONの場合のみ使う
+    int namelen;    // kindがND_DEF_FUNCTIONの場合のみ使う
 };
 
 // トークンの種類
@@ -58,6 +61,16 @@ struct Token {
     int len;
 };
 
+typedef struct Function Function;
+
+struct Function {
+    Function *next;
+    char *name;
+    int namelen;
+    int lvarnum;
+    Node *block;
+};
+
 typedef struct LVar LVar;
 
 struct LVar {
@@ -79,6 +92,7 @@ Node *primary();
 void error(char *fmt, ... );
 void error_at(char *loc, char *fmt, char *user_input, ...);
 void debug_print(char *fmt, ... );
+int mysubstr( char *t, char *s, int pos, int len );
 
 void gen(Node *node);
 void program();

@@ -14,6 +14,7 @@ void gen_lval(Node *node) {
 void gen(Node *node) {
     int lidx = labelidx++;
     Node *child = node->child;
+    char t[64];
     switch (node->kind) {
     case ND_NUM:
         printf("    push %d\n", node->val);
@@ -96,6 +97,13 @@ void gen(Node *node) {
             printf("    pop rax\n");
             child = child->child;
         }
+        return;
+    case ND_FUNCALL:
+        mysubstr(t, node->name, 0, node->namelen);
+        printf("    mov eax, 0\n");
+        printf("    call %s\n", t);
+        // main関数内で毎回pop raxしてるため、同じ値をスタックに積んでおく
+        printf("    push rax\n");
         return;
     }
 

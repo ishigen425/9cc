@@ -1,10 +1,15 @@
 #!/bin/bash
+cat <<EOF | gcc -xc -c -o tmp2.o -
+int ret3() { return 3; }
+int ret5() { return 5; }
+EOF
+
 assert() {
     expected="$1"
     input="$2"
 
     ./9cc "$input" > tmp.s
-    cc -o tmp tmp.s
+    cc -o tmp tmp.s tmp2.o
     ./tmp
     actual="$?"
 
@@ -85,6 +90,12 @@ assert 0 'd=10;for(e=1;d>0;d=d-1)d;'
 assert 10 'a=1;d=0;if(a==1){a=2;d=10;}d;'
 assert 16 'a=0;d=1;while(a<4){a=a+1;d=d*2;}d;'
 assert 32 'a=0;d=1;for(a=0;a<5;a=a+0){a=a+1;d=d*2;}d;'
+
+assert 3 'ret3();'
+assert 5 'ret5();'
+
+assert 3 'return ret3();'
+assert 5 'return ret5();'
 
 echo OK
 

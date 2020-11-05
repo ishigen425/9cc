@@ -148,7 +148,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         } else {
             int len = 0;
-            while('a' <= *(p+len) && *(p+len) <= 'z') {
+            while(is_alnum(*(p+len))) {
                 len++;
             }
             cur = new_token(TK_INDENT, cur, p, len);
@@ -355,10 +355,21 @@ Node *primary() {
     Token *tok = consume_indent();
     if (tok) {
         Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_LVAR;
+
+        if(startswith(tok->next->str, "(")) {
+            char t[64];
+            mysubstr(t, tok->str, 0, tok->len);
+            node->name = tok->str;
+            node->namelen = tok->len;
+            node->kind = ND_FUNCALL;
+            expect("(");
+            expect(")");
+            return node;
+        }
 
         LVar *lvar = find_lvar(tok);
         if(lvar) {
+            node->kind = ND_LVAR;
             node->offset = lvar->offset;
         } else {
             lvar = calloc(1, sizeof(LVar));
@@ -369,6 +380,7 @@ Node *primary() {
                 lvar->offset = locals->offset + 8;
             else
                 lvar->offset = 0;
+            node->kind = ND_LVAR;
             node->offset = lvar->offset;
             locals = lvar;
         }
