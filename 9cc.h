@@ -32,7 +32,7 @@ struct Node {
     Node *testexpr; // for文での条件式
     Node *updstmt;  // for文での変化式
     Node *child;    // ブロックで使う
-    Node *arg1;     // 引数の参照を持つ
+    Node *arg[6];   // 引数の参照を持つ
     int val;        // kindがND_NUMの場合のみ使う
     int offset;     // kindがND_LVARの場合のみ使う
     char *name;     // kindがND_DEF_FUNCTIONの場合のみ使う

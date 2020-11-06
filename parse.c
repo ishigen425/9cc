@@ -135,7 +135,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
-        if (strchr("+-*/)(<>=;{}", *p)) {
+        if (strchr("+-*/)(<>=;{},", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
@@ -363,8 +363,16 @@ Node *primary() {
             node->namelen = tok->len;
             node->kind = ND_FUNCALL;
             expect("(");
+            int idx = 0;
             while(!consume(")")){
-                node->arg1 = add();
+                if(idx >= 6)
+                    error("not implementation error!");
+                node->arg[idx] = add();
+                idx++;
+                if(!consume(",")){
+                    expect(")");
+                    break;
+                }
             }
             return node;
         }

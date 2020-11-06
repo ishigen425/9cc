@@ -4,6 +4,9 @@ int ret3() { return 3; }
 int ret5() { return 5; }
 int add2(int x) { return x + 2; }
 int mul2(int x) { return x * 2; }
+int sum6(int a, int b, int c, int d, int e, int f) { return a + b + c + d + e + f; }
+int mul3vardiv3var(int a, int b, int c, int d, int e, int f) { return a * b * c / d / e / f; }
+int mul2var(int a, int b) { return a * b; }
 EOF
 
 assert() {
@@ -115,6 +118,11 @@ assert 0 'mul2(0);'
 assert 4 'mul2(2);'
 assert 8 'add2(mul2(3));'
 assert 24 'mul2(add2(mul2(add2(ret3()))));'
+
+assert 21 'sum6(1,2,3,4,5,6);'
+assert 21 '{ return sum6(1,2,3,4,5,6); }'
+assert 24 '{ return mul2var(3, 8); }'
+assert 1 '{ return mul3vardiv3var(1,2,3,1,2,3); }'
 
 echo OK
 
