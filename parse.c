@@ -364,7 +364,7 @@ Node *primary() {
             node->kind = ND_FUNCALL;
             expect("(");
             while(!consume(")")){
-                node->arg1 = equality();
+                node->arg1 = add();
             }
             return node;
         }
