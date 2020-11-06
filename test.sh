@@ -2,6 +2,8 @@
 cat <<EOF | gcc -xc -c -o tmp2.o -
 int ret3() { return 3; }
 int ret5() { return 5; }
+int add2(int x) { return x + 2; }
+int mul2(int x) { return x * 2; }
 EOF
 
 assert() {
@@ -101,6 +103,18 @@ assert 5 'ret5();'
 
 assert 3 'return ret3();'
 assert 5 'return ret5();'
+
+assert 15 'return ret3() * ret5();'
+
+assert 3 'add2(1);'
+assert 2 'add2(0);'
+assert 3 'a=1;add2(a);'
+assert 3 'a=1;return add2(a);'
+
+assert 0 'mul2(0);'
+assert 4 'mul2(2);'
+assert 8 'add2(mul2(3));'
+assert 24 'mul2(add2(mul2(add2(ret3()))));'
 
 echo OK
 

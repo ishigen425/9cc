@@ -100,6 +100,10 @@ void gen(Node *node) {
         return;
     case ND_FUNCALL:
         mysubstr(t, node->name, 0, node->namelen);
+        if(node->arg1 != NULL){
+            gen(node->arg1);
+            printf("    pop rdi\n");
+        }
         printf("    mov eax, 0\n");
         printf("    call %s\n", t);
         // main関数内で毎回pop raxしてるため、同じ値をスタックに積んでおく

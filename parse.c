@@ -363,7 +363,9 @@ Node *primary() {
             node->namelen = tok->len;
             node->kind = ND_FUNCALL;
             expect("(");
-            expect(")");
+            while(!consume(")")){
+                node->arg1 = equality();
+            }
             return node;
         }
 
