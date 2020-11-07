@@ -2,6 +2,7 @@
 #include "9cc.h"
 
 int labelidx = 0;
+char *arglist[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR)
@@ -118,10 +119,33 @@ void gen(Node *node) {
                 printf("    pop r9\n");
             idx++;
         }
-        printf("    mov eax, 0\n");
+
+        printf("    mov rax, 0\n");
         printf("    call %s\n", t);
         // main関数内で毎回pop raxしてるため、同じ値をスタックに積んでおく
         printf("    push rax\n");
+        return;
+    case ND_FUNCDEF:
+        mysubstr(t, node->name, 0, node->namelen);
+        printf("%s:\n", t);
+        //　プロローグ
+        printf("    push rbp\n");
+        printf("    mov rbp, rsp\n");
+        // 変数の領域確保
+        printf("    sub rsp, 208\n");
+        for(int i = 0; i < node->argnum; i++) {
+            gen_lval(node->arg[i]);
+            printf("    pop rax\n");
+            printf("    mov [rax], %s\n", arglist[i]);
+            printf("    mov rax, 0\n");
+        }
+
+        gen(node->lhs);
+
+        // エピローグ
+        printf("    mov rsp, rbp\n");
+        printf("    pop rbp\n");
+        printf("    ret\n");
         return;
     }
 

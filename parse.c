@@ -198,9 +198,9 @@ Node *assign() {
     return node;
 }
 
-Node *child;
 
 Node *stmt() {
+    Node *child;
     Node *node;
     if (consume("{")) {
         node = calloc(1, sizeof(Node));
@@ -271,9 +271,46 @@ Node *stmt() {
 void program() {
     int i = 0;
     while(!at_eof()) {
-        code[i++] = stmt();
+        code[i++] = define_function();
     }
     code[i] = NULL;
+}
+
+Node *define_function() {
+    char t[64];
+    Node *func_node = calloc(1, sizeof(Node));
+    Token *tok = consume_indent();
+    func_node->kind = ND_FUNCDEF;
+    func_node->name = tok->str;
+    func_node->namelen = tok->len;
+    int argnum = 0;
+    expect("(");
+    while(!consume(")")){
+        if(argnum >= 6)
+            error("not implementation error!");
+        // 引数をローカル変数と同様に扱う
+        LVar *lvar = calloc(1, sizeof(LVar));
+        Node *node = calloc(1, sizeof(Node));
+        lvar->next = locals;
+        lvar->name = token->str;
+        lvar->len = token->len;
+        if(locals != NULL)
+            lvar->offset = locals->offset + 8;
+        else
+            lvar->offset = 8;
+        node->kind = ND_LVAR;
+        node->offset = lvar->offset;
+        locals = lvar;
+        func_node->arg[argnum++] = node;
+        token = token->next;
+        if(!consume(",")){
+            expect(")");
+            break;
+        }
+    }
+    func_node->argnum = argnum;
+    func_node->lhs = stmt();
+    return func_node;
 }
 
 Node *expr() {
