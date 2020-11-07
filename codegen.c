@@ -105,18 +105,7 @@ void gen(Node *node) {
         // RDI, RSI, RDX, RCX, R8, R9 を順番に使う
         while(node->arg[idx] != NULL){
             gen(node->arg[idx]);
-            if(idx == 0)
-                printf("    pop rdi\n");
-            else if(idx == 1)
-                printf("    pop rsi\n");
-            else if(idx == 2)
-                printf("    pop rdx\n");
-            else if(idx == 3)
-                printf("    pop rcx\n");
-            else if(idx == 4)
-                printf("    pop r8\n");
-            else if(idx == 5)
-                printf("    pop r9\n");
+            printf("    pop %s\n", arglist[idx]);
             idx++;
         }
 
