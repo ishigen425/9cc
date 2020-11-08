@@ -133,5 +133,8 @@ assert 14 'add2var(x, y){ return x + y; }main(){ return add2var(6, 8); }'
 assert 15 'add5var(a,b,c,d,e){ return a + b + c + d + e; }main(){ return add5var(1, 2, 3, 4, 5); }'
 assert 22 'add5var(a,b,c,d,e,f){ return a + b + c + d + e + f; }main(){ return add5var(1, 2, 3, 4, 5, 7); }'
 
+assert 3 'main() { x = 3; y = &x; return *y; }'
+assert 3 'main() { x = 3; y = 0; z = &y + 8; return *z;}'
+
 echo OK
 
