@@ -33,6 +33,13 @@ Token *consume_indent() {
     return NULL;
 }
 
+void expect_type(char *op) {
+    if (strlen(op) != token->len || memcmp(token->str, op, token->len)) {
+        error_at(token->str, user_input, "expected \"%s\"", op); 
+    }
+    token = token->next;
+}
+
 void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(token->str, op, token->len)) {
@@ -112,6 +119,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
         if (startswith(p, "return ")) {
             cur = new_token(TK_RETURN, cur, p, 6);
             p += 6;
+            continue;
+        }
+
+        if (startswith(p, "int ")) {
+            cur = new_token(TK_INT, cur, p, 3);
+            p += 3;
             continue;
         }
 

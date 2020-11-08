@@ -117,6 +117,20 @@ Node *stmt() {
         node->lhs = expr();
         expect(";");
         return node;
+    } else if (consume_kind(TK_INT)) {
+        Token *tok = consume_indent();
+        LVar *lvar = calloc(1, sizeof(LVar));
+        lvar->next = locals;
+        lvar->name = tok->str;
+        lvar->len = tok->len;
+        if(locals != NULL)
+            lvar->offset = locals->offset + 8;
+        else
+            lvar->offset = 0;
+        locals = lvar;
+        expect(";");
+        node = new_node_num(0);
+        return node;
     } else {
         node = expr();
         expect(";");
@@ -134,6 +148,7 @@ void program() {
 
 Node *define_function() {
     char t[64];
+    expect_type("int");
     Node *func_node = calloc(1, sizeof(Node));
     Token *tok = consume_indent();
     func_node->kind = ND_FUNCDEF;
@@ -142,6 +157,7 @@ Node *define_function() {
     int argnum = 0;
     expect("(");
     while(!consume(")")){
+        expect_type("int");
         if(argnum >= 6)
             error("not implementation error!");
         // 引数をローカル変数と同様に扱う
@@ -279,17 +295,9 @@ Node *primary() {
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
         } else {
-            lvar = calloc(1, sizeof(LVar));
-            lvar->next = locals;
-            lvar->name = tok->str;
-            lvar->len = tok->len;
-            if(locals != NULL)
-                lvar->offset = locals->offset + 8;
-            else
-                lvar->offset = 0;
-            node->kind = ND_LVAR;
-            node->offset = lvar->offset;
-            locals = lvar;
+            char t[64];
+            mysubstr(t, tok->str, 0, tok->len);
+            error("%s is not defined.", t);
         }
         return node;
     }

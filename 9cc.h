@@ -54,6 +54,7 @@ typedef enum {
     TK_ELSE,     // else
     TK_FOR,      // for
     TK_EOF,      // 入力の終わり
+    TK_INT,      // int
 } TokenKind;
 
 typedef struct Token Token;
@@ -103,3 +104,4 @@ bool consume_kind(TokenKind kind);
 Token *consume_indent();
 int expect_number();
 void expect(char *op);
+void expect_type(char *op);
