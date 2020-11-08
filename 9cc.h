@@ -87,8 +87,17 @@ void error(char *fmt, ... );
 void error_at(char *loc, char *fmt, char *user_input, ...);
 void debug_print(char *fmt, ... );
 int mysubstr( char *t, char *s, int pos, int len );
+bool startswith(char *p, char *q);
 
 void gen(Node *node);
 void program();
 
 Node *code[100];
+Token *token;
+char *user_input;
+
+bool consume(char *op);
+bool consume_kind(TokenKind kind);
+Token *consume_indent();
+int expect_number();
+void expect(char *op);

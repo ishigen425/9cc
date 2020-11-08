@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "9cc.h"
 
 int labelidx = 0;

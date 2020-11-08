@@ -43,3 +43,8 @@ int mysubstr( char *t, char *s, int pos, int len ) {
     *t = '\0';
     return 0;
 }
+
+
+ bool startswith(char *p, char *q) {
+    return memcmp(p, q, strlen(q)) == 0;
+ }
