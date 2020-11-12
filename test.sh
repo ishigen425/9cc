@@ -136,5 +136,8 @@ assert 22 'int add5var(int a,int b,int c,int d,int e,int f){ return a + b + c + 
 assert 3 'int main() { int x;int y;x = 3; y = &x; return *y; }'
 assert 3 'int main() { int x;int y;int z;x = 3; y = 0; z = &y + 8; return *z;}'
 
+assert 3 'int main() { int x; int *y; y = &x; *y = 3; return x; }'
+assert 3 'int main() { int x; int **y; int z; y = &x; *y = &z; **y = 3; return z; }'
+
 echo OK
 

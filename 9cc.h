@@ -24,6 +24,13 @@ typedef enum {
     ND_DEREF,   // 単項*
 } NodeKind;
 
+typedef struct Type Type;
+
+struct Type {
+    enum { INT, PTR } ty;
+    struct Type *ptr_to;
+};
+
 typedef struct Node Node;
 
 struct Node {
@@ -74,6 +81,7 @@ struct LVar {
     char *name;
     int len;
     int offset;
+    Type *type;     // 変数の型を保持する
 };
 
 void tokenize(char *p);

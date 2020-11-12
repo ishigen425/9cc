@@ -118,11 +118,25 @@ Node *stmt() {
         expect(";");
         return node;
     } else if (consume_kind(TK_INT)) {
+        Type *top = calloc(1, sizeof(Type));
+        top->ptr_to = calloc(1, sizeof(Type));
+        Type *tmp = top->ptr_to;
+        while (consume("*")) {
+            // ポインタ型を定義する
+            tmp->ty = PTR;
+            tmp->ptr_to = calloc(1, sizeof(Type));
+            tmp = tmp->ptr_to;
+        }
+        tmp->ty = INT;
+        tmp->ptr_to = NULL;
+        top = top->ptr_to;
+        
         Token *tok = consume_indent();
         LVar *lvar = calloc(1, sizeof(LVar));
         lvar->next = locals;
         lvar->name = tok->str;
         lvar->len = tok->len;
+        lvar->type = top;
         if(locals != NULL)
             lvar->offset = locals->offset + 8;
         else
