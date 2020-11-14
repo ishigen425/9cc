@@ -260,6 +260,8 @@ Node *mul() {
     }
 }
 
+Type *arg_type;
+
 Node *unary(){
     if (consume("+"))
         return unary();
@@ -269,8 +271,20 @@ Node *unary(){
         return new_binary(ND_ADDR, unary(), NULL);
     if (consume("*"))
         return new_binary(ND_DEREF, unary(), NULL);
+    if (consume_kind(TK_SIZEOF)){
+        arg_type = NULL;
+        Node *node = primary();
+        if(arg_type != NULL && arg_type->ty == PTR){
+            node = new_node_num(8);
+        } else {
+            node = new_node_num(4);
+        }
+        arg_type = NULL;
+        return node;
+    }   
     return primary();
 }
+
 
 Node *primary() {
     if (consume("(")) {
@@ -309,6 +323,7 @@ Node *primary() {
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
             node->type = lvar->type;
+            arg_type = lvar->type;
         } else {
             char t[64];
             mysubstr(t, tok->str, 0, tok->len);

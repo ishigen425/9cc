@@ -63,6 +63,7 @@ typedef enum {
     TK_FOR,      // for
     TK_EOF,      // 入力の終わり
     TK_INT,      // int
+    TK_SIZEOF,   // sizeof
 } TokenKind;
 
 typedef struct Token Token;

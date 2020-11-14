@@ -92,6 +92,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "sizeof ") || startswith(p, "sizeof(")) {
+            cur = new_token(TK_SIZEOF, cur, p, 6);
+            p += 6;
+            continue;
+        }
+
         if (startswith(p, "for ") || startswith(p, "for(")) {
             cur = new_token(TK_FOR, cur, p, 3);
             p += 3;

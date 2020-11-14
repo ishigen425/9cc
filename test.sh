@@ -159,5 +159,11 @@ assert 11 'int main() { int *p; p = alloc4(7,11,23,34); p = p + 4; p = p - 2; re
 assert 23 'int main() { int *p; p = alloc4(7,11,23,34); p = p + 4; p = p - 1; return *p; }'
 assert 34 'int main() { int *p; p = alloc4(7,11,23,34); p = p + 4; p = p - 0; return *p; }'
 
+assert 4 'int main() { return sizeof(1); }'
+assert 4 'int main() { return sizeof(sizeof(10)); }'
+assert 4 'int main() { int *x; return sizeof(sizeof(x)); }'
+assert 8 'int main() { int *x; return sizeof(x); }'
+assert 8 'int main() { int *x; return sizeof(x + 3); }'
+
 echo OK
 
