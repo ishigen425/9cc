@@ -160,9 +160,51 @@ void gen(Node *node) {
 
     switch (node->kind) {
     case ND_ADD:
+        if(node->lhs->type != NULL && node->lhs->type->ty == PTR){
+            // 一旦戻す
+            printf("    push rax\n");
+            printf("    push rdi\n");
+
+            if(node->lhs->type->ptr_to->ty == INT){
+                printf("    push 4\n");
+            } else if (node->lhs->type->ptr_to->ty == PTR){
+                printf("    push 8\n");
+            } else {
+                error("not implementation error!");
+            }
+            printf("    pop rdi\n");
+            printf("    pop rax\n");
+
+            printf("    imul rax, rdi\n");
+            printf("    push rax\n");
+
+            printf("    pop rdi\n");
+            printf("    pop rax\n");
+        }
         printf("    add rax, rdi\n");
         break;
     case ND_SUB:
+    if(node->lhs->type != NULL && node->lhs->type->ty == PTR){
+            // 一旦戻す
+            printf("    push rax\n");
+            printf("    push rdi\n");
+
+            if(node->lhs->type->ptr_to->ty == INT){
+                printf("    push 4\n");
+            } else if (node->lhs->type->ptr_to->ty == PTR){
+                printf("    push 8\n");
+            } else {
+                error("not implementation error!");
+            }
+            printf("    pop rdi\n");
+            printf("    pop rax\n");
+
+            printf("    imul rax, rdi\n");
+            printf("    push rax\n");
+
+            printf("    pop rdi\n");
+            printf("    pop rax\n");
+        }
         printf("    sub rax, rdi\n");
         break;
     case ND_MUL:

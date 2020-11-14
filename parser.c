@@ -308,6 +308,7 @@ Node *primary() {
         if(lvar) {
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
+            node->type = lvar->type;
         } else {
             char t[64];
             mysubstr(t, tok->str, 0, tok->len);
