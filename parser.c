@@ -16,6 +16,12 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
+int next_offset() {
+    if(locals == NULL)
+        return 8;
+    return locals->offset + 8;
+}
+
 bool at_eof() {
     return token->kind == TK_EOF;
 }
@@ -137,10 +143,7 @@ Node *stmt() {
         lvar->name = tok->str;
         lvar->len = tok->len;
         lvar->type = top;
-        if(locals != NULL)
-            lvar->offset = locals->offset + 8;
-        else
-            lvar->offset = 0;
+        lvar->offset = next_offset();
         locals = lvar;
         expect(";");
         node = new_node_num(0);
@@ -180,10 +183,7 @@ Node *define_function() {
         lvar->next = locals;
         lvar->name = token->str;
         lvar->len = token->len;
-        if(locals != NULL)
-            lvar->offset = locals->offset + 8;
-        else
-            lvar->offset = 8;
+        lvar->offset = next_offset();
         node->kind = ND_LVAR;
         node->offset = lvar->offset;
         locals = lvar;
