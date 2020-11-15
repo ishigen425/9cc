@@ -54,8 +54,10 @@ void gen(Node *node) {
         printf("    cmp rax, 0\n");
         printf("    je .Lend%d\n", lidx);
         gen(node->rhs);
+        printf("    pop rax\n");
         printf("    jmp .Lbegin%d\n", lidx);
         printf(".Lend%d:\n", lidx);
+        printf("    push rax\n");
         return;
     case ND_IF_ELSE:
         gen(node->lhs);
@@ -66,7 +68,9 @@ void gen(Node *node) {
         printf("    jmp .Lend%d\n", lidx);
         printf(".Lelse%d:\n", lidx);
         gen(node->elsehs->lhs);
+        printf("    pop rax\n");
         printf(".Lend%d:\n", lidx);
+        printf("    push rax\n");
         return;
     case ND_IF:
         gen(node->lhs);
@@ -74,7 +78,9 @@ void gen(Node *node) {
         printf("    cmp rax, 0\n");
         printf("    je .Lend%d\n", lidx);
         gen(node->rhs);
+        printf("    pop rax\n");
         printf(".Lend%d:\n", lidx);
+        printf("    push rax\n");
         return;
     case ND_FOR:
         if (node->initstmt != NULL) {
@@ -96,6 +102,7 @@ void gen(Node *node) {
         }
         printf("    jmp .Lbegin%d\n", lidx);
         printf(".Lend%d:\n", lidx);
+        printf("    push rax\n");
         return;
     case ND_BLOCK:
         while (child->lhs != NULL) {
@@ -103,6 +110,7 @@ void gen(Node *node) {
             printf("    pop rax\n");
             child = child->child;
         }
+        printf("    push rax\n");
         return;
     case ND_FUNCALL:
         mysubstr(t, node->name, 0, node->namelen);
@@ -126,7 +134,8 @@ void gen(Node *node) {
         printf("    push rbp\n");
         printf("    mov rbp, rsp\n");
         // 変数の領域確保
-        printf("    sub rsp, 208\n");
+        int variable_space = (node->argnum + node->localsnum) * 8;
+        printf("    sub rsp, %d\n", variable_space);
         for(int i = 0; i < node->argnum; i++) {
             gen_lval(node->arg[i]);
             printf("    pop rax\n");

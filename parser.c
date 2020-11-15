@@ -7,6 +7,7 @@
 #include "9cc.h"
 
 LVar *locals;
+int locals_num;
 
 LVar *find_lvar(Token *tok) {
     for (LVar *var = locals; var ; var = var->next) {
@@ -144,6 +145,7 @@ Node *stmt() {
         lvar->len = tok->len;
         lvar->type = top;
         lvar->offset = next_offset();
+        locals_num++;
         locals = lvar;
         expect(";");
         node = new_node_num(0);
@@ -164,6 +166,8 @@ void program() {
 }
 
 Node *define_function() {
+    locals = NULL;
+    locals_num = 0;
     char t[64];
     expect_type("int");
     Node *func_node = calloc(1, sizeof(Node));
@@ -196,6 +200,7 @@ Node *define_function() {
     }
     func_node->argnum = argnum;
     func_node->lhs = stmt();
+    func_node->localsnum = locals_num;
     return func_node;
 }
 

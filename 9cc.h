@@ -49,6 +49,7 @@ struct Node {
     int namelen;    // kindがND_DEF_FUNCTIONの場合のみ使う
     int argnum;     // 引数の個数
     Type *type;      // kindがND_LVARの場合のみ使う
+    int localsnum;  // ローカル変数の個数
 };
 
 // トークンの種類
