@@ -54,13 +54,52 @@ Node *new_node_indent(int offset) {
     return node;
 }
 
-Node *assign() {
-    Node *node = equality();
-    if (consume("="))
-        node = new_binary(ND_ASSIGN, node, assign());
-    return node;
+void program() {
+    int i = 0;
+    while(!at_eof()) {
+        code[i++] = define_function();
+    }
+    code[i] = NULL;
 }
 
+Node *define_function() {
+    locals = NULL;
+    locals_num = 0;
+    char t[64];
+    expect_type("int");
+    Node *func_node = calloc(1, sizeof(Node));
+    Token *tok = consume_indent();
+    func_node->kind = ND_FUNCDEF;
+    func_node->name = tok->str;
+    func_node->namelen = tok->len;
+    int argnum = 0;
+    expect("(");
+    while(!consume(")")){
+        expect_type("int");
+        if(argnum >= 6)
+            error("not implementation error!");
+        // 引数をローカル変数と同様に扱う
+        LVar *lvar = calloc(1, sizeof(LVar));
+        Node *node = calloc(1, sizeof(Node));
+        lvar->next = locals;
+        lvar->name = token->str;
+        lvar->len = token->len;
+        lvar->offset = next_offset();
+        node->kind = ND_LVAR;
+        node->offset = lvar->offset;
+        locals = lvar;
+        func_node->arg[argnum++] = node;
+        token = token->next;
+        if(!consume(",")){
+            expect(")");
+            break;
+        }
+    }
+    func_node->argnum = argnum;
+    func_node->lhs = stmt();
+    func_node->localsnum = locals_num;
+    return func_node;
+}
 
 Node *stmt() {
     Node *child;
@@ -157,55 +196,15 @@ Node *stmt() {
     }
 }
 
-void program() {
-    int i = 0;
-    while(!at_eof()) {
-        code[i++] = define_function();
-    }
-    code[i] = NULL;
-}
-
-Node *define_function() {
-    locals = NULL;
-    locals_num = 0;
-    char t[64];
-    expect_type("int");
-    Node *func_node = calloc(1, sizeof(Node));
-    Token *tok = consume_indent();
-    func_node->kind = ND_FUNCDEF;
-    func_node->name = tok->str;
-    func_node->namelen = tok->len;
-    int argnum = 0;
-    expect("(");
-    while(!consume(")")){
-        expect_type("int");
-        if(argnum >= 6)
-            error("not implementation error!");
-        // 引数をローカル変数と同様に扱う
-        LVar *lvar = calloc(1, sizeof(LVar));
-        Node *node = calloc(1, sizeof(Node));
-        lvar->next = locals;
-        lvar->name = token->str;
-        lvar->len = token->len;
-        lvar->offset = next_offset();
-        node->kind = ND_LVAR;
-        node->offset = lvar->offset;
-        locals = lvar;
-        func_node->arg[argnum++] = node;
-        token = token->next;
-        if(!consume(",")){
-            expect(")");
-            break;
-        }
-    }
-    func_node->argnum = argnum;
-    func_node->lhs = stmt();
-    func_node->localsnum = locals_num;
-    return func_node;
-}
-
 Node *expr() {
     return assign();
+}
+
+Node *assign() {
+    Node *node = equality();
+    if (consume("="))
+        node = new_binary(ND_ASSIGN, node, assign());
+    return node;
 }
 
 Node *equality() {

@@ -88,6 +88,8 @@ struct LVar {
 };
 
 void tokenize(char *p);
+Node *stmt();
+Node *assign();
 Node *expr();
 Node *equality();
 Node *relational();
