@@ -98,6 +98,7 @@ Node *mul();
 Node *unary();
 Node *primary();
 Node *define_function();
+Node *mul_ptr();
 
 void error(char *fmt, ... );
 void error_at(char *loc, char *fmt, char *user_input, ...);

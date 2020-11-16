@@ -242,7 +242,11 @@ Node *add() {
     Node *node = mul();
 
     for (;;) {
-        if(consume("+"))
+        if (node->type != NULL && node->type->ty == PTR && consume("+"))
+            node = new_binary(ND_ADD, node, mul_ptr(node->type));
+        else if (node->type != NULL && node->type->ty == PTR && consume("-"))
+            node = new_binary(ND_SUB, node, mul_ptr(node->type));
+        else if(consume("+"))
             node = new_binary(ND_ADD, node, mul());
         else if (consume("-"))
             node = new_binary(ND_SUB, node, mul());
@@ -261,6 +265,25 @@ Node *mul() {
             node = new_binary(ND_DIV, node, unary());
         else
             return node;
+    }
+}
+
+Node *mul_ptr(Type *type) {
+    int size = 0;
+    if (type->ptr_to->ty == INT) {
+        size = 4;
+    } else if (type->ptr_to->ty == PTR){
+        size = 8;
+    }
+    Node *node = unary();
+
+    for (;;) {
+        if (consume("*"))
+            node = new_binary(ND_MUL, node, unary());
+        else if (consume("/"))
+            node = new_binary(ND_DIV, node, unary());
+        else
+            return new_binary(ND_MUL, node, new_node_num(size));
     }
 }
 
