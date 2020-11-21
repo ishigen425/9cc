@@ -8,6 +8,7 @@
 
 LVar *locals;
 int locals_num;
+GVar *globals;
 
 LVar *find_lvar(Token *tok) {
     for (LVar *var = locals; var ; var = var->next) {
@@ -57,48 +58,86 @@ Node *new_node_indent(int offset) {
 void program() {
     int i = 0;
     while(!at_eof()) {
-        code[i++] = define_function();
+        code[i++] = define_function_gvar();
     }
     code[i] = NULL;
 }
 
-Node *define_function() {
+Node *define_function_gvar() {
     locals = NULL;
     locals_num = 0;
     char t[64];
-    expect_type("int");
-    Node *func_node = calloc(1, sizeof(Node));
+    TypeKind ty;
+    if (consume_kind(TK_INT))
+        ty = INT;
     Token *tok = consume_indent();
-    func_node->kind = ND_FUNCDEF;
-    func_node->name = tok->str;
-    func_node->namelen = tok->len;
-    int argnum = 0;
-    expect("(");
-    while(!consume(")")){
-        expect_type("int");
-        if(argnum >= 6)
-            error("not implementation error!");
-        // 引数をローカル変数と同様に扱う
-        LVar *lvar = calloc(1, sizeof(LVar));
-        Node *node = calloc(1, sizeof(Node));
-        lvar->next = locals;
-        lvar->name = token->str;
-        lvar->len = token->len;
-        lvar->offset = next_offset();
-        node->kind = ND_LVAR;
-        node->offset = lvar->offset;
-        locals = lvar;
-        func_node->arg[argnum++] = node;
-        token = token->next;
-        if(!consume(",")){
-            expect(")");
-            break;
+    if (consume("(")) {
+        Node *func_node = calloc(1, sizeof(Node));
+        func_node->kind = ND_FUNCDEF;
+        func_node->name = tok->str;
+        func_node->namelen = tok->len;
+        int argnum = 0;
+        while(!consume(")")){
+            expect_type("int");
+            if(argnum >= 6)
+                error("not implementation error!");
+            // 引数をローカル変数と同様に扱う
+            LVar *lvar = calloc(1, sizeof(LVar));
+            Node *node = calloc(1, sizeof(Node));
+            lvar->next = locals;
+            lvar->name = token->str;
+            lvar->len = token->len;
+            lvar->offset = next_offset();
+            node->kind = ND_LVAR;
+            node->offset = lvar->offset;
+            locals = lvar;
+            func_node->arg[argnum++] = node;
+            token = token->next;
+            if(!consume(",")){
+                expect(")");
+                break;
+            }
         }
+        func_node->argnum = argnum;
+        func_node->lhs = stmt();
+        func_node->localsnum = locals_num;
+        return func_node;
+    } else {
+        Type *top = calloc(1, sizeof(Type));
+        top->ptr_to = calloc(1, sizeof(Type));
+        Type *tmp = top->ptr_to;
+        while (consume("*")) {
+            // ポインタ型を定義する
+            tmp->ty = PTR;
+            tmp->ptr_to = calloc(1, sizeof(Type));
+            tmp = tmp->ptr_to;
+        }
+        tmp->ty = INT;
+        tmp->ptr_to = NULL;
+        top = top->ptr_to;
+        
+        Token *tok = consume_indent();
+        GVar *gvar = calloc(1, sizeof(LVar));
+        gvar->next = globals;
+        gvar->name = tok->str;
+        gvar->len = tok->len;
+        if (consume("[")) {
+            tmp = calloc(1, sizeof(Type));
+            tmp->ptr_to = top;
+            tmp->ty = ARRAY;
+            tmp->array_size = expect_number();
+            expect("]");
+            gvar->type = tmp;
+        } else {
+            gvar->type = top;
+        }
+        globals = gvar;
+        expect(";");
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_GVAR;
+        node->type = top;
+        return node;
     }
-    func_node->argnum = argnum;
-    func_node->lhs = stmt();
-    func_node->localsnum = locals_num;
-    return func_node;
 }
 
 Node *stmt() {

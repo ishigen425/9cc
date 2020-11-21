@@ -22,16 +22,22 @@ typedef enum {
     ND_FUNCDEF, // 関数定義
     ND_ADDR,    // 単項&
     ND_DEREF,   // 単項*
+    ND_GVAR,    // グローバル変数
 } NodeKind;
 
 typedef struct Type Type;
 
+typedef enum {
+    INT,
+    PTR,
+    ARRAY,
+} TypeKind;
+
 struct Type {
-    enum { INT, PTR, ARRAY } ty;
+    TypeKind ty;
     struct Type *ptr_to;
     size_t array_size;
 };
-
 typedef struct Node Node;
 
 struct Node {
@@ -88,6 +94,15 @@ struct LVar {
     Type *type;     // 変数の型を保持する
 };
 
+typedef struct GVar GVar;
+
+struct GVar {
+    GVar *next;
+    char *name;
+    int len;
+    Type *type;     // 変数の型を保持する
+};
+
 void tokenize(char *p);
 Node *stmt();
 Node *assign();
@@ -98,7 +113,7 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
-Node *define_function();
+Node *define_function_gvar();
 Node *mul_ptr();
 
 void error(char *fmt, ... );

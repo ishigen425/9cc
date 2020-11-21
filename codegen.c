@@ -17,6 +17,7 @@ void gen(Node *node) {
     int lidx = labelidx++;
     Node *child = node->child;
     char t[64];
+    int gvarsize = 0;
     switch (node->kind) {
     case ND_NUM:
         printf("    push %d\n", node->val);
@@ -158,6 +159,15 @@ void gen(Node *node) {
         printf("    pop rax\n");
         printf("    mov rax, [rax]\n");
         printf("    push rax\n");
+        return;
+    case ND_GVAR:
+        mysubstr(t, node->name, 0, node->namelen);
+        printf("%s:\n", t);
+        if (node->type->ty == ARRAY)
+            gvarsize = node->type->array_size * 4;
+        else
+            gvarsize = 4;
+        printf("    .zero%d\n", gvarsize);
         return;
     }
 
