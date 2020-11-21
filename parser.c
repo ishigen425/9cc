@@ -182,9 +182,23 @@ Node *stmt() {
         lvar->next = locals;
         lvar->name = tok->str;
         lvar->len = tok->len;
-        lvar->type = top;
         lvar->offset = next_offset();
-        locals_num++;
+        if (consume("[")) {
+            tmp = calloc(1, sizeof(Type));
+            tmp->ptr_to = top;
+            tmp->ty = ARRAY;
+            tmp->array_size = expect_number();
+            expect("]");
+            lvar->type = tmp;
+            if (tmp->ptr_to->ty == INT){
+                locals_num += tmp->array_size / 2 + 1;
+            } else {
+                locals_num += tmp->array_size;
+            }
+        } else {
+            lvar->type = top;
+            locals_num++;
+        }
         locals = lvar;
         expect(";");
         node = new_node_num(0);
@@ -244,8 +258,22 @@ Node *add() {
     for (;;) {
         if (node->type != NULL && node->type->ty == PTR && consume("+"))
             node = new_binary(ND_ADD, node, mul_ptr(node->type));
+        else if (node->type != NULL && node->type->ty == ARRAY && consume("+"))
+            node = new_binary(ND_ADD, node, mul_ptr(node->type));
+        else if (node->lhs != NULL && node->lhs->type != NULL && node->lhs->type->ty == ARRAY && node->kind == ND_ADDR && consume("+")){
+            Type *type = calloc(1, sizeof(Type));
+            type->ptr_to = calloc(1, sizeof(Type));
+            type->ptr_to->ty = INT;
+            node = new_binary(ND_ADD, node, mul_ptr(type));
+        }
         else if (node->type != NULL && node->type->ty == PTR && consume("-"))
             node = new_binary(ND_SUB, node, mul_ptr(node->type));
+        else if (node->lhs != NULL && node->lhs->type != NULL && node->lhs->type->ty == ARRAY && node->kind == ND_ADDR && consume("-")){
+            Type *type = calloc(1, sizeof(Type));
+            type->ptr_to = calloc(1, sizeof(Type));
+            type->ptr_to->ty = INT;
+            node = new_binary(ND_SUB, node, mul_ptr(type));
+        }
         else if(consume("+"))
             node = new_binary(ND_ADD, node, mul());
         else if (consume("-"))
@@ -301,8 +329,10 @@ Node *unary(){
     if (consume_kind(TK_SIZEOF)){
         arg_type = NULL;
         Node *node = primary();
-        if(arg_type != NULL && arg_type->ty == PTR){
+        if (arg_type != NULL && arg_type->ty == PTR){
             node = new_node_num(8);
+        } else if (arg_type != NULL && arg_type->ty == ARRAY) {
+            node = new_node_num(arg_type->array_size);
         } else {
             node = new_node_num(4);
         }
@@ -351,6 +381,9 @@ Node *primary() {
             node->offset = lvar->offset;
             node->type = lvar->type;
             arg_type = lvar->type;
+            if (lvar->type != NULL && lvar->type->ty == ARRAY) {
+                return new_binary(ND_ADDR, node, NULL);
+            }
         } else {
             char t[64];
             mysubstr(t, tok->str, 0, tok->len);
