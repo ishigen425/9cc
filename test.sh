@@ -171,5 +171,9 @@ assert 3 'int main() { int a[2]; *a = 1; *(a + 1) = 2; return *a + *(a + 1); }'
 assert 3 'int main() { int a[2]; *(a + 0) = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p + 1); }'
 assert 3 'int main() { int a[3]; return sizeof(a); }'
 
+assert 1 'int main() { int a[3]; a[0] = 1; return a[0]; }'
+assert 6 'int main() { int a[3]; a[0] = 1; a[1] = 5; return a[0] + a[1]; }'
+assert 9 'int main() { int a[3]; a[0] = 1; a[1] = 3; a[2] = 5; return a[0] + a[1] + a[2]; }'
+
 echo OK
 

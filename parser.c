@@ -286,6 +286,7 @@ Node *add() {
 Node *mul() {
     Node *node = unary();
 
+
     for (;;) {
         if (consume("*"))
             node = new_binary(ND_MUL, node, unary());
@@ -381,6 +382,18 @@ Node *primary() {
             node->offset = lvar->offset;
             node->type = lvar->type;
             arg_type = lvar->type;
+            if (consume("[")){
+                int index = expect_number();
+                int size = 0;
+                if (lvar->type->ptr_to->ty == PTR){
+                    size = 8;
+                } else {
+                    size = 4;
+                }
+                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(size), new_node_num(index))), NULL);
+                expect("]");
+                return node;
+            }
             if (lvar->type != NULL && lvar->type->ty == ARRAY) {
                 return new_binary(ND_ADDR, node, NULL);
             }
