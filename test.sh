@@ -175,5 +175,10 @@ assert 1 'int main() { int a[3]; a[0] = 1; return a[0]; }'
 assert 6 'int main() { int a[3]; a[0] = 1; a[1] = 5; return a[0] + a[1]; }'
 assert 9 'int main() { int a[3]; a[0] = 1; a[1] = 3; a[2] = 5; return a[0] + a[1] + a[2]; }'
 
+assert 0 'int x; int y[5]; int main() { return 0; }'
+assert 1 'int x; int main(){ x = 1; return x; }'
+assert 3 'int x; int increment(){ x = x + 1; } int main() { x = 0; increment(); increment(); increment(); return x; }'
+assert 8 'int x; int increment(){ x = x + 1; } int main() { x = 5; increment(); increment(); increment(); return x; }'
+
 echo OK
 

@@ -5,12 +5,19 @@
 int labelidx = 0;
 char *arglist[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
-void gen_lval(Node *node) {
-    if (node->kind != ND_LVAR)
+void gen_variable(Node *node) {
+    if (node->kind == ND_LVAR){
+        printf("    mov rax, rbp\n");
+        printf("    sub rax, %d\n", node->offset);
+        printf("    push rax\n");
+    } else if (node->kind == ND_GVARREF) {
+        char t[64];
+        mysubstr(t, node->name, 0, node->namelen);
+        printf("    lea rax, %s[rip]\n", t);
+        printf("    push rax\n");
+    } else {
         error("代入の左辺値が変数ではありません");
-    printf("    mov rax, rbp\n");
-    printf("    sub rax, %d\n", node->offset);
-    printf("    push rax\n");
+    }
 }
 
 void gen(Node *node) {
@@ -23,7 +30,7 @@ void gen(Node *node) {
         printf("    push %d\n", node->val);
         return;
     case ND_LVAR:
-        gen_lval(node);
+        gen_variable(node);
         printf("    pop rax\n");
         printf("    mov rax, [rax]\n");
         printf("    push rax\n");
@@ -32,7 +39,7 @@ void gen(Node *node) {
         if(node->lhs->kind == ND_DEREF){
             gen(node->lhs->lhs);
         }else{
-            gen_lval(node->lhs);
+            gen_variable(node->lhs);
         }
         gen(node->rhs);
 
@@ -138,7 +145,7 @@ void gen(Node *node) {
         int variable_space = (node->argnum + node->localsnum) * 8;
         printf("    sub rsp, %d\n", variable_space);
         for(int i = 0; i < node->argnum; i++) {
-            gen_lval(node->arg[i]);
+            gen_variable(node->arg[i]);
             printf("    pop rax\n");
             printf("    mov [rax], %s\n", arglist[i]);
             printf("    mov rax, 0\n");
@@ -152,7 +159,7 @@ void gen(Node *node) {
         printf("    ret\n");
         return;
     case ND_ADDR:
-        gen_lval(node->lhs);
+        gen_variable(node->lhs);
         return;
     case ND_DEREF:
         gen(node->lhs);
@@ -160,14 +167,18 @@ void gen(Node *node) {
         printf("    mov rax, [rax]\n");
         printf("    push rax\n");
         return;
-    case ND_GVAR:
+    case ND_GVARDEF:
         mysubstr(t, node->name, 0, node->namelen);
-        printf("%s:\n", t);
         if (node->type->ty == ARRAY)
             gvarsize = node->type->array_size * 4;
         else
             gvarsize = 4;
-        printf("    .zero%d\n", gvarsize);
+        printf(".comm %s, %d, 4\n", t, gvarsize);
+        return;
+    case ND_GVARREF:
+        mysubstr(t, node->name, 0, node->namelen);
+        printf("    mov rax, %s[rip]\n", t);
+        printf("    push rax\n");
         return;
     }
 

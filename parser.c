@@ -18,6 +18,14 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
+GVar *find_gvar(Token *tok) {
+    for (GVar *var = globals; var ; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    }
+    return NULL;
+}
+
 int next_offset() {
     if(locals == NULL)
         return 8;
@@ -116,7 +124,6 @@ Node *define_function_gvar() {
         tmp->ptr_to = NULL;
         top = top->ptr_to;
         
-        Token *tok = consume_indent();
         GVar *gvar = calloc(1, sizeof(LVar));
         gvar->next = globals;
         gvar->name = tok->str;
@@ -134,8 +141,10 @@ Node *define_function_gvar() {
         globals = gvar;
         expect(";");
         Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_GVAR;
-        node->type = top;
+        node->kind = ND_GVARDEF;
+        node->type = gvar->type;
+        node->name = gvar->name;
+        node->namelen = gvar->len;
         return node;
     }
 }
@@ -416,6 +425,7 @@ Node *primary() {
         }
 
         LVar *lvar = find_lvar(tok);
+        GVar *gvar = find_gvar(tok);
         if(lvar) {
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
@@ -436,6 +446,10 @@ Node *primary() {
             if (lvar->type != NULL && lvar->type->ty == ARRAY) {
                 return new_binary(ND_ADDR, node, NULL);
             }
+        } else if(gvar) {
+            node->kind = ND_GVARREF;
+            node->name = gvar->name;
+            node->namelen = gvar->len;
         } else {
             char t[64];
             mysubstr(t, tok->str, 0, tok->len);
