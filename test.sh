@@ -180,5 +180,8 @@ assert 1 'int x; int main(){ x = 1; return x; }'
 assert 3 'int x; int increment(){ x = x + 1; } int main() { x = 0; increment(); increment(); increment(); return x; }'
 assert 8 'int x; int increment(){ x = x + 1; } int main() { x = 5; increment(); increment(); increment(); return x; }'
 
+assert 10 'int x[10]; int main() { x[1] = 10; x[5] = 2; return x[1]; }'
+assert 10 'int y[20]; int setter(int x){ y[5] = x; } int main() { setter(10); return y[5]; }'
+
 echo OK
 
