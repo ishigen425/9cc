@@ -191,5 +191,8 @@ assert 34 'int memo[30]; int fib(int x){ if(x == 0){ return 0; } if(x == 1){ mem
 assert 0 'int *g; int main(){ return 0; }'
 assert 2 'int *g; int main(){ int x; g = &x; x = 2; return *g; }'
 
+assert 10 'int main(){ int *x[10]; int y; int z; x[0] = &y; x[1] = &z; y = 3; z = 7; return *(x[0]) + *(x[1]); }'
+assert 10 'int *x[2]; int main(){ int y; int z; x[0] = &y; x[1] = &z; y = 3; z = 7; return *(x[0]) + *(x[1]); }'
+
 echo OK
 
