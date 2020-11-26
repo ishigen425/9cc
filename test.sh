@@ -188,5 +188,8 @@ assert 10 'int y[20]; int main() { int i; for(i = 0;i < 20;i = i+1){ y[i] = i; }
 assert 21 'int fib[30]; int main() { int i; fib[0] = 0; fib[1] = 1; for(i = 2; i < 30; i = i+1) { fib[i] = fib[i-1] + fib[i-2]; } return fib[8]; } '
 assert 34 'int memo[30]; int fib(int x){ if(x == 0){ return 0; } if(x == 1){ memo[1] = 1; return 1; } memo[x] = fib(x-1) + fib(x-2); return memo[x]; } int main() { return fib(9); } '
 
+assert 0 'int *g; int main(){ return 0; }'
+assert 2 'int *g; int main(){ int x; g = &x; x = 2; return *g; }'
+
 echo OK
 

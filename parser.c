@@ -119,6 +119,7 @@ Node *define_function_gvar() {
             tmp->ty = PTR;
             tmp->ptr_to = calloc(1, sizeof(Type));
             tmp = tmp->ptr_to;
+            tok = consume_indent();
         }
         tmp->ty = INT;
         tmp->ptr_to = NULL;
