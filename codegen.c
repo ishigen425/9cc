@@ -32,7 +32,11 @@ void gen(Node *node) {
     case ND_LVAR:
         gen_variable(node);
         printf("    pop rax\n");
-        printf("    mov rax, [rax]\n");
+        if (node->type != NULL && node->type->ty == CHAR) {
+            printf("    movzx ecx, [rax]\n");
+        } else {
+            printf("    mov rax, [rax]\n");
+        }
         printf("    push rax\n");
         return;
     case ND_ASSIGN:

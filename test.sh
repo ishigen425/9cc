@@ -194,5 +194,9 @@ assert 2 'int *g; int main(){ int x; g = &x; x = 2; return *g; }'
 assert 10 'int main(){ int *x[10]; int y; int z; x[0] = &y; x[1] = &z; y = 3; z = 7; return *(x[0]) + *(x[1]); }'
 assert 10 'int *x[2]; int main(){ int y; int z; x[0] = &y; x[1] = &z; y = 3; z = 7; return *(x[0]) + *(x[1]); }'
 
+assert 0 'char x[3]; char *a[10]; int main() { char y; char t[2]; return 0; }'
+assert 3 'int main(){ char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y; }'
+assert 3 'char xx[2]; int main(){ char x[3]; x[0] = -1; x[1] = 2; xx[0] = 4; return x[0] + xx[0]; }'
+
 echo OK
 

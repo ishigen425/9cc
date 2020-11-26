@@ -32,6 +32,7 @@ typedef enum {
     INT,
     PTR,
     ARRAY,
+    CHAR,
 } TypeKind;
 
 struct Type {
@@ -73,6 +74,7 @@ typedef enum {
     TK_EOF,      // 入力の終わり
     TK_INT,      // int
     TK_SIZEOF,   // sizeof
+    TK_CHAR,     // char
 } TokenKind;
 
 typedef struct Token Token;
