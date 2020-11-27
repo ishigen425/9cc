@@ -232,7 +232,6 @@ Node *stmt() {
         lvar->next = locals;
         lvar->name = tok->str;
         lvar->len = tok->len;
-        lvar->offset = next_offset();
         if (consume("[")) {
             tmp = calloc(1, sizeof(Type));
             tmp->ptr_to = top;
@@ -241,13 +240,15 @@ Node *stmt() {
             expect("]");
             lvar->type = tmp;
             if (tmp->ptr_to->ty == INT){
-                locals_num += tmp->array_size / 2 + 1;
+                locals_num += tmp->array_size;
             } else {
                 locals_num += tmp->array_size;
             }
+            lvar->offset = next_offset() + (tmp->array_size-1) * 8;
         } else {
             lvar->type = top;
             locals_num++;
+            lvar->offset = next_offset();
         }
         locals = lvar;
         expect(";");
@@ -384,12 +385,6 @@ Node *mul() {
 }
 
 Node *mul_ptr(Type *type) {
-    int size = 0;
-    if (type->ptr_to->ty == INT) {
-        size = 4;
-    } else if (type->ptr_to->ty == PTR){
-        size = 8;
-    }
     Node *node = unary();
 
     for (;;) {
@@ -398,7 +393,7 @@ Node *mul_ptr(Type *type) {
         else if (consume("/"))
             node = new_binary(ND_DIV, node, unary());
         else
-            return new_binary(ND_MUL, node, new_node_num(size));
+            return new_binary(ND_MUL, node, new_node_num(8));
     }
 }
 
@@ -472,13 +467,7 @@ Node *primary() {
             node->type = lvar->type;
             arg_type = lvar->type;
             if (consume("[")){
-                int size = 0;
-                if (lvar->type->ptr_to->ty == PTR){
-                    size = 8;
-                } else {
-                    size = 4;
-                }
-                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(size), equality())), NULL);
+                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
                 expect("]");
                 return node;
             }
@@ -490,13 +479,7 @@ Node *primary() {
             node->name = gvar->name;
             node->namelen = gvar->len;
             if (consume("[")){
-                int size = 0;
-                if (gvar->type->ptr_to->ty == PTR){
-                    size = 8;
-                } else {
-                    size = 4;
-                }
-                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(size), equality())), NULL);
+                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
                 expect("]");
                 return node;
             }
