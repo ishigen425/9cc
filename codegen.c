@@ -15,6 +15,9 @@ void gen_variable(Node *node) {
         mysubstr(t, node->name, 0, node->namelen);
         printf("    lea rax, %s[rip]\n", t);
         printf("    push rax\n");
+    } else if (node->kind == ND_LITERALREF) {
+        printf("    lea rax, literal%d[rip]\n", node->offset);
+        printf("    push rax\n");
     } else {
         error("代入の左辺値が変数ではありません");
     }
@@ -141,6 +144,7 @@ void gen(Node *node) {
         return;
     case ND_FUNCDEF:
         mysubstr(t, node->name, 0, node->namelen);
+        printf(".text\n");
         printf("%s:\n", t);
         //　プロローグ
         printf("    push rbp\n");
@@ -177,12 +181,23 @@ void gen(Node *node) {
             gvarsize = node->type->array_size * 4;
         else
             gvarsize = 4;
+        printf(".data\n");
         printf(".comm %s, %d, 4\n", t, gvarsize);
         return;
     case ND_GVARREF:
         mysubstr(t, node->name, 0, node->namelen);
         printf("    mov rax, %s[rip]\n", t);
         printf("    push rax\n");
+        return;
+    case ND_LITERAL:
+        printf(".data\n");
+        printf(".globl literal%d\n", node->offset);
+        printf("literal%d:\n", node->offset);
+        mysubstr(t, node->name, 0, node->namelen);
+        for(int i = 0; i < node->namelen; i++) {
+            printf("    .byte %d\n", t[i]);
+        }
+        printf("    .byte 0\n");
         return;
     }
 

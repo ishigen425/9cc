@@ -202,5 +202,8 @@ assert 3 'char xx[2]; int main(){ char x[3]; x[0] = -1; x[1] = 2; xx[0] = 4; ret
 assert 10 'int x[10]; int main(){ x[9] = 10; x[8] = 7; return x[9]; }'
 assert 17 'int main(){ int x[10]; x[9] = 10; x[8] = 7; return x[9] + x[8]; }'
 
+assert 0 'int main(){ printf("Hello World!"); return 0; }'
+assert 0 'int main(){ printf("Hello World1"); printf("Hello World2"); return 0; }'
+
 echo OK
 

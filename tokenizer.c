@@ -140,6 +140,17 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "\"")){
+            int len = 0;
+            p++;
+            for(; !startswith(p, "\""); p++){
+                len++;
+            }
+            p++;
+            cur = new_token(TK_STR, cur, p-len-1, len);
+            continue;
+        }
+
         if (strchr("+-*/)(<>=;{},&[]", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;

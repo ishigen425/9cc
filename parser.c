@@ -9,6 +9,8 @@
 LVar *locals;
 int locals_num;
 GVar *globals;
+GVar *literals;
+int literals_def_idx = 0;
 
 LVar *find_lvar(Token *tok) {
     for (LVar *var = locals; var ; var = var->next) {
@@ -20,6 +22,14 @@ LVar *find_lvar(Token *tok) {
 
 GVar *find_gvar(Token *tok) {
     for (GVar *var = globals; var ; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    }
+    return NULL;
+}
+
+GVar *find_gvar_literals(Token *tok) {
+    for (GVar *var = literals; var ; var = var->next) {
         if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
             return var;
     }
@@ -435,8 +445,8 @@ Node *primary() {
     }
 
     Token *tok = consume_indent();
+    Node *node = calloc(1, sizeof(Node));
     if (tok) {
-        Node *node = calloc(1, sizeof(Node));
 
         if(startswith(tok->next->str, "(")) {
             char t[64];
@@ -493,5 +503,24 @@ Node *primary() {
         }
         return node;
     }
+    if (token->kind == TK_STR) {
+        GVar *gvar = calloc(1, sizeof(LVar));
+        gvar->next = globals;
+        gvar->name = token->str;
+        gvar->len = token->len;
+        node->kind = ND_LITERALREF;
+        node->name = gvar->name;
+        node->namelen = gvar->len;
+        node->offset = literals_def_idx;
+        Node *def_node = calloc(1, sizeof(Node));
+        def_node->kind = ND_LITERAL;
+        def_node->name = gvar->name;
+        def_node->namelen = gvar->len;
+        def_node->offset = literals_def_idx;
+        literals_def[literals_def_idx++] = def_node;
+        token = token->next;
+        return new_binary(ND_ADDR, node, NULL);
+    }
+
     return new_node_num(expect_number());
 }

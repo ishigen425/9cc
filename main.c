@@ -17,10 +17,11 @@ int main(int argc, char **argv) {
     program();
     
     printf(".intel_syntax noprefix\n");
-    printf(".globl main\n");
     
-    // プロローグ
-    // 変数26個分の領域を確保する
+    for (int i = 0; literals_def[i]; i++) {
+        gen(literals_def[i]);
+    }
+    printf(".globl main\n");
     for (int i = 0; code[i]; i++){
         gen(code[i]);
     }

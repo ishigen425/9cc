@@ -24,6 +24,8 @@ typedef enum {
     ND_DEREF,   // 単項*
     ND_GVARDEF, // グローバル変数の定義
     ND_GVARREF, // グローバル変数の参照
+    ND_LITERAL, // リテラル文字
+    ND_LITERALREF, // リテラル文字の参照
 } NodeKind;
 
 typedef struct Type Type;
@@ -75,6 +77,7 @@ typedef enum {
     TK_INT,      // int
     TK_SIZEOF,   // sizeof
     TK_CHAR,     // char
+    TK_STR,      // string
 } TokenKind;
 
 typedef struct Token Token;
@@ -131,6 +134,7 @@ void program();
 Node *code[100];
 Token *token;
 char *user_input;
+Node *literals_def[100];
 
 bool consume(char *op);
 bool consume_kind(TokenKind kind);
