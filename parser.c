@@ -18,6 +18,14 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
+GVar *find_gvar(Token *tok) {
+    for (GVar *var = globals; var ; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    }
+    return NULL;
+}
+
 int next_offset() {
     if(locals == NULL)
         return 8;
@@ -70,6 +78,8 @@ Node *define_function_gvar() {
     TypeKind ty;
     if (consume_kind(TK_INT))
         ty = INT;
+    if (consume_kind(TK_CHAR))
+        ty = CHAR;
     Token *tok = consume_indent();
     if (consume("(")) {
         Node *func_node = calloc(1, sizeof(Node));
@@ -111,12 +121,11 @@ Node *define_function_gvar() {
             tmp->ty = PTR;
             tmp->ptr_to = calloc(1, sizeof(Type));
             tmp = tmp->ptr_to;
+            tok = consume_indent();
         }
-        tmp->ty = INT;
+        tmp->ty = ty;
         tmp->ptr_to = NULL;
         top = top->ptr_to;
-        
-        Token *tok = consume_indent();
         GVar *gvar = calloc(1, sizeof(LVar));
         gvar->next = globals;
         gvar->name = tok->str;
@@ -134,8 +143,10 @@ Node *define_function_gvar() {
         globals = gvar;
         expect(";");
         Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_GVAR;
-        node->type = top;
+        node->kind = ND_GVARDEF;
+        node->type = gvar->type;
+        node->name = gvar->name;
+        node->namelen = gvar->len;
         return node;
     }
 }
@@ -221,7 +232,6 @@ Node *stmt() {
         lvar->next = locals;
         lvar->name = tok->str;
         lvar->len = tok->len;
-        lvar->offset = next_offset();
         if (consume("[")) {
             tmp = calloc(1, sizeof(Type));
             tmp->ptr_to = top;
@@ -230,10 +240,48 @@ Node *stmt() {
             expect("]");
             lvar->type = tmp;
             if (tmp->ptr_to->ty == INT){
-                locals_num += tmp->array_size / 2 + 1;
+                locals_num += tmp->array_size;
             } else {
                 locals_num += tmp->array_size;
             }
+            lvar->offset = next_offset() + (tmp->array_size-1) * 8;
+        } else {
+            lvar->type = top;
+            locals_num++;
+            lvar->offset = next_offset();
+        }
+        locals = lvar;
+        expect(";");
+        node = new_node_num(0);
+        return node;
+    } else if (consume_kind(TK_CHAR)) {
+        Type *top = calloc(1, sizeof(Type));
+        top->ptr_to = calloc(1, sizeof(Type));
+        Type *tmp = top->ptr_to;
+        while (consume("*")) {
+            // ポインタ型を定義する
+            tmp->ty = PTR;
+            tmp->ptr_to = calloc(1, sizeof(Type));
+            tmp = tmp->ptr_to;
+        }
+        tmp->ty = CHAR;
+        tmp->ptr_to = NULL;
+        top = top->ptr_to;
+        
+        Token *tok = consume_indent();
+        LVar *lvar = calloc(1, sizeof(LVar));
+        lvar->next = locals;
+        lvar->name = tok->str;
+        lvar->len = tok->len;
+        lvar->offset = next_offset();
+        if (consume("[")) {
+            tmp = calloc(1, sizeof(Type));
+            tmp->ptr_to = top;
+            tmp->ty = ARRAY;
+            tmp->array_size = expect_number();
+            expect("]");
+            lvar->type = tmp;
+            locals_num += tmp->array_size;
         } else {
             lvar->type = top;
             locals_num++;
@@ -337,12 +385,6 @@ Node *mul() {
 }
 
 Node *mul_ptr(Type *type) {
-    int size = 0;
-    if (type->ptr_to->ty == INT) {
-        size = 4;
-    } else if (type->ptr_to->ty == PTR){
-        size = 8;
-    }
     Node *node = unary();
 
     for (;;) {
@@ -351,7 +393,7 @@ Node *mul_ptr(Type *type) {
         else if (consume("/"))
             node = new_binary(ND_DIV, node, unary());
         else
-            return new_binary(ND_MUL, node, new_node_num(size));
+            return new_binary(ND_MUL, node, new_node_num(8));
     }
 }
 
@@ -373,6 +415,8 @@ Node *unary(){
             node = new_node_num(8);
         } else if (arg_type != NULL && arg_type->ty == ARRAY) {
             node = new_node_num(arg_type->array_size);
+        } else if (arg_type != NULL && arg_type->ty == CHAR) {
+            node = new_node_num(1);
         } else {
             node = new_node_num(4);
         }
@@ -416,24 +460,30 @@ Node *primary() {
         }
 
         LVar *lvar = find_lvar(tok);
+        GVar *gvar = find_gvar(tok);
         if(lvar) {
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
             node->type = lvar->type;
             arg_type = lvar->type;
             if (consume("[")){
-                int index = expect_number();
-                int size = 0;
-                if (lvar->type->ptr_to->ty == PTR){
-                    size = 8;
-                } else {
-                    size = 4;
-                }
-                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(size), new_node_num(index))), NULL);
+                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
                 expect("]");
                 return node;
             }
             if (lvar->type != NULL && lvar->type->ty == ARRAY) {
+                return new_binary(ND_ADDR, node, NULL);
+            }
+        } else if(gvar) {
+            node->kind = ND_GVARREF;
+            node->name = gvar->name;
+            node->namelen = gvar->len;
+            if (consume("[")){
+                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
+                expect("]");
+                return node;
+            }
+            if (gvar->type != NULL && gvar->type->ty == ARRAY) {
                 return new_binary(ND_ADDR, node, NULL);
             }
         } else {

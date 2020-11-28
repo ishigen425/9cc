@@ -22,7 +22,8 @@ typedef enum {
     ND_FUNCDEF, // 関数定義
     ND_ADDR,    // 単項&
     ND_DEREF,   // 単項*
-    ND_GVAR,    // グローバル変数
+    ND_GVARDEF, // グローバル変数の定義
+    ND_GVARREF, // グローバル変数の参照
 } NodeKind;
 
 typedef struct Type Type;
@@ -31,6 +32,7 @@ typedef enum {
     INT,
     PTR,
     ARRAY,
+    CHAR,
 } TypeKind;
 
 struct Type {

@@ -139,7 +139,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             p += 4;
             continue;
         }
-        
+
         if (strchr("+-*/)(<>=;{},&[]", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
