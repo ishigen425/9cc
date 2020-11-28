@@ -1,9 +1,9 @@
-CFLAGS=-std=c11 -g -static -no-pie
+CFLAGS=-std=c11 -g -static
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
 
 9cc: $(OBJS)
-	$(CC) -no-pie -o 9cc $(OBJS) $(LDFLAGS)
+	$(CC) -o 9cc $(OBJS) $(LDFLAGS)
 
 $(OBJS): 9cc.h
 
