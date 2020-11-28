@@ -140,6 +140,26 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "//")) {
+            p += 2;
+            while (*p != '\n'){
+                p++;
+            }
+            continue;
+        }
+
+        if (startswith(p, "/*")) {
+            p += 2;
+            while (!startswith(p, "*/") && *p != '\0'){
+                p++;
+            }
+            if (*p == '\0') {
+                error_at(p, user_input,"コメントが閉じられていません。");
+            }
+            p += 2;
+            continue;
+        }
+
         if (startswith(p, "\"")){
             int len = 0;
             p++;
