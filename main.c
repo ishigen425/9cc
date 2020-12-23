@@ -14,6 +14,17 @@ char *read_file(char *path) {
         error("cannot open %s: %s", path, strerror(errno));
     }
 
+    // substring filename
+    int idx = 0;
+    while(*path != '\0'){
+        filename[idx++] = *path++;
+        if(*path == '/'){
+            path++;
+            idx = 0;
+        }
+    }
+    filename[idx] = '\0';
+
     if (fseek(fp, 0, SEEK_END) == -1) {
         error("%s: fseek: %s", path, strerror(errno));
     }

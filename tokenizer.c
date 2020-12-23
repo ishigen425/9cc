@@ -35,7 +35,7 @@ Token *consume_indent() {
 
 void expect_type(char *op) {
     if (strlen(op) != token->len || memcmp(token->str, op, token->len)) {
-        error_at(token->str, user_input, "expected \"%s\"", op); 
+        error_at(token->str, "expected \"%s\"", op); 
     }
     token = token->next;
 }
@@ -43,14 +43,14 @@ void expect_type(char *op) {
 void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(token->str, op, token->len)) {
-        error_at(token->str, user_input, "expected \"%s\"", op); 
+        error_at(token->str, "expected \"%s\"", op); 
     }
     token = token->next;
 }
 
 int expect_number() {
     if (token->kind != TK_NUM)
-        error_at(token->str, user_input, "数ではありません");
+        error_at(token->str, "数ではありません");
     int val = token->val;
     token = token->next;
     return val;
@@ -154,7 +154,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
                 p++;
             }
             if (*p == '\0') {
-                error_at(p, user_input,"コメントが閉じられていません。");
+                error_at(p, "コメントが閉じられていません。");
             }
             p += 2;
             continue;
@@ -192,10 +192,34 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
-        error_at(p, user_input, "トークナイズできません");
+        error_at(p, "トークナイズできません");
     }
 
     new_token(TK_EOF, cur, p, 0);
     token = head.next;
     return;
+}
+
+void error_at(char *loc, char *msg, ...){
+    char *line = loc;
+    while(user_input < line && line[-1] != '\n'){
+        line--;
+    }
+    char *end = loc;
+    while(*end != '\n'){
+        end++;
+    }
+    int line_num = 1;
+    for (char *p = user_input; p < line; p++){
+        if(*p == '\n'){
+            line_num++;
+        }
+    }
+    int indent = fprintf(stderr, "%s:%d: ", filename, line_num);
+    fprintf(stderr, "%.*s\n", (int)(end- line), line);
+
+    int pos = loc - line + indent;
+    fprintf(stderr, "%*s", pos, "");
+    fprintf(stderr, "^ %s", msg);
+    exit(1);
 }

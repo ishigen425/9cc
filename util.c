@@ -15,19 +15,6 @@ void error(char *fmt, ... ) {
     exit(1);
 }
 
-void error_at(char *loc, char *user_input, char *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-
-    int pos = loc - user_input - 1;
-    fprintf(stderr, "%s\n", user_input);
-    fprintf(stderr, "%*s", pos, "");
-    fprintf(stderr, " ^");
-    vfprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
-    exit(1);
-}
-
 void debug_print(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
