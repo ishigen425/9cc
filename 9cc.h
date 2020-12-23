@@ -123,6 +123,7 @@ Node *define_function_gvar();
 Node *mul_ptr();
 
 void error(char *fmt, ... );
+void error_at(char *loc, char *user_input, char *msg, ...);
 void debug_print(char *fmt, ... );
 int mysubstr( char *t, char *s, int pos, int len );
 bool startswith(char *p, char *q);
