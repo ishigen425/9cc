@@ -151,7 +151,7 @@ void gen(Node *node) {
         printf("    mov rbp, rsp\n");
         // 変数の領域確保
         int variable_space = (node->argnum + node->localsnum) * 8;
-        printf("    sub rsp, %d\n", variable_space);
+        printf("    sub rsp, %d\n", variable_space + 8);
         for(int i = 0; i < node->argnum; i++) {
             gen_variable(node->arg[i]);
             printf("    pop rax\n");
