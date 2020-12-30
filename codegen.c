@@ -195,7 +195,12 @@ void gen(Node *node) {
         printf("literal%d:\n", node->offset);
         mysubstr(t, node->name, 0, node->namelen);
         for(int i = 0; i < node->namelen; i++) {
-            printf("    .byte %d\n", t[i]);
+            if(t[i] == '\\' && t[i+1] == 'n'){
+                printf("    .byte 10\n");
+                i++;
+            }else{
+                printf("    .byte %d\n", t[i]);
+            }
         }
         printf("    .byte 0\n");
         return;
