@@ -227,6 +227,12 @@ void gen(Node *node) {
         printf("    cqo\n");
         printf("    idiv rdi\n");
         break;
+    case ND_MOD:
+        printf("    cqo\n");
+        printf("    idiv rdi\n");
+        printf("    push rdx\n");
+        printf("    pop rax\n");
+        break;
     case ND_EQ:
         printf("    cmp rax, rdi\n");
         printf("    sete al\n");
