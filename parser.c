@@ -46,6 +46,45 @@ bool at_eof() {
     return token->kind == TK_EOF;
 }
 
+LVar *defined_int_var(){
+    Type *top = calloc(1, sizeof(Type));
+    top->ptr_to = calloc(1, sizeof(Type));
+    Type *tmp = top->ptr_to;
+    while (consume("*")) {
+        // ポインタ型を定義する
+        tmp->ty = PTR;
+        tmp->ptr_to = calloc(1, sizeof(Type));
+        tmp = tmp->ptr_to;
+    }
+    tmp->ty = INT;
+    tmp->ptr_to = NULL;
+    top = top->ptr_to;
+    
+    Token *tok = consume_indent();
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->name = tok->str;
+    lvar->len = tok->len;
+    if (consume("[")) {
+        tmp = calloc(1, sizeof(Type));
+        tmp->ptr_to = top;
+        tmp->ty = ARRAY;
+        tmp->array_size = expect_number();
+        expect("]");
+        lvar->type = tmp;
+        if (tmp->ptr_to->ty == INT){
+            locals_num += tmp->array_size;
+        } else {
+            locals_num += tmp->array_size;
+        }
+        lvar->offset = next_offset() + (tmp->array_size-1) * 8;
+    } else {
+        lvar->type = top;
+        locals_num++;
+        lvar->offset = next_offset();
+    }
+    return lvar;
+}
+
 Node *new_node(NodeKind kind) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
@@ -224,42 +263,8 @@ Node *stmt() {
         expect(";");
         return node;
     } else if (consume_kind(TK_INT)) {
-        Type *top = calloc(1, sizeof(Type));
-        top->ptr_to = calloc(1, sizeof(Type));
-        Type *tmp = top->ptr_to;
-        while (consume("*")) {
-            // ポインタ型を定義する
-            tmp->ty = PTR;
-            tmp->ptr_to = calloc(1, sizeof(Type));
-            tmp = tmp->ptr_to;
-        }
-        tmp->ty = INT;
-        tmp->ptr_to = NULL;
-        top = top->ptr_to;
-        
-        Token *tok = consume_indent();
-        LVar *lvar = calloc(1, sizeof(LVar));
+        LVar *lvar = defined_int_var();
         lvar->next = locals;
-        lvar->name = tok->str;
-        lvar->len = tok->len;
-        if (consume("[")) {
-            tmp = calloc(1, sizeof(Type));
-            tmp->ptr_to = top;
-            tmp->ty = ARRAY;
-            tmp->array_size = expect_number();
-            expect("]");
-            lvar->type = tmp;
-            if (tmp->ptr_to->ty == INT){
-                locals_num += tmp->array_size;
-            } else {
-                locals_num += tmp->array_size;
-            }
-            lvar->offset = next_offset() + (tmp->array_size-1) * 8;
-        } else {
-            lvar->type = top;
-            locals_num++;
-            lvar->offset = next_offset();
-        }
         locals = lvar;
         expect(";");
         node = new_node_num(0);
@@ -526,3 +531,4 @@ Node *primary() {
 
     return new_node_num(expect_number());
 }
+
