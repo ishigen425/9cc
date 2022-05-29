@@ -92,6 +92,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "struct ") || startswith(p, "struct{")) {
+            cur = new_token(TK_STRUCT, cur, p, 6);
+            p += 6;
+            continue;
+        }
+
         if (startswith(p, "sizeof ") || startswith(p, "sizeof(")) {
             cur = new_token(TK_SIZEOF, cur, p, 6);
             p += 6;

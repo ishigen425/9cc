@@ -27,6 +27,7 @@ typedef enum {
     ND_GVARREF, // グローバル変数の参照
     ND_LITERAL, // リテラル文字
     ND_LITERALREF, // リテラル文字の参照
+    ND_STRUCT,
 } NodeKind;
 
 typedef struct Type Type;
@@ -43,6 +44,17 @@ struct Type {
     struct Type *ptr_to;
     size_t array_size;
 };
+
+typedef struct LVar LVar;
+
+struct LVar {
+    LVar *next;
+    char *name;
+    int len;
+    int offset;
+    Type *type;     // 変数の型を保持する
+};
+
 typedef struct Node Node;
 
 struct Node {
@@ -62,6 +74,7 @@ struct Node {
     int argnum;     // 引数の個数
     Type *type;      // kindがND_LVARの場合のみ使う
     int localsnum;  // ローカル変数の個数
+    LVar *struct_lvar; // structでの変数
 };
 
 // トークンの種類
@@ -79,6 +92,7 @@ typedef enum {
     TK_SIZEOF,   // sizeof
     TK_CHAR,     // char
     TK_STR,      // string
+    TK_STRUCT,   // struct
 } TokenKind;
 
 typedef struct Token Token;
@@ -89,16 +103,6 @@ struct Token {
     int val;
     char *str;
     int len;
-};
-
-typedef struct LVar LVar;
-
-struct LVar {
-    LVar *next;
-    char *name;
-    int len;
-    int offset;
-    Type *type;     // 変数の型を保持する
 };
 
 typedef struct GVar GVar;

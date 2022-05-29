@@ -205,6 +205,8 @@ void gen(Node *node) {
         }
         printf("    .byte 0\n");
         return;
+    case ND_STRUCT:
+        return;
     }
 
     gen(node->lhs);

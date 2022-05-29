@@ -119,6 +119,32 @@ LVar *defined_char_var() {
     return lvar;
 }
 
+Node *define_struct() {
+    Token *tok = consume_indent();
+    LVar *variabls = NULL;
+    expect("{");
+    while (!consume("}")) {
+        if (consume_kind(TK_INT)) {
+            LVar *lvar = defined_int_var();
+            lvar->next = variabls;
+            variabls = lvar;
+            expect(";");
+        } else if (consume_kind(TK_CHAR)) {
+            LVar *lvar = defined_char_var();
+            lvar->next = variabls;
+            variabls = lvar;
+            expect(";");
+        }
+    }
+    expect(";");
+    Node *node = calloc(1, sizeof(Node));
+    node->struct_lvar = variabls;
+    node->kind = ND_STRUCT;
+    node->name = tok->str;
+    node->namelen = tok->len;
+    return node;
+}
+
 Node *new_node(NodeKind kind) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
@@ -155,6 +181,9 @@ void program() {
 }
 
 Node *define_function_gvar() {
+    if (consume_kind(TK_STRUCT)) {
+        return define_struct();
+    }
     locals = NULL;
     locals_num = 0;
     char t[64];
