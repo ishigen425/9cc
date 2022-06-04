@@ -193,6 +193,7 @@ assert 0 'test_file/char/testae.c'
 assert 1 'test_file/comment/test.c'
 
 assert 0 'test_file/struct/testa.c'
+assert 0 'test_file/struct/testb.c'
 
 echo OK
 

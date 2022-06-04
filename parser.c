@@ -10,6 +10,7 @@ LVar *locals;
 int locals_num;
 GVar *globals;
 GVar *literals;
+Node *defined_structs;
 int literals_def_idx = 0;
 
 LVar *find_lvar(Token *tok) {
@@ -31,6 +32,14 @@ GVar *find_gvar(Token *tok) {
 GVar *find_gvar_literals(Token *tok) {
     for (GVar *var = literals; var ; var = var->next) {
         if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    }
+    return NULL;
+}
+
+Node *find_defined_structs(Token *tok) {
+    for (Node *var = defined_structs; var; var = var->child) {
+        if (var->namelen == tok->len && !memcmp(tok->str, var->name, var->namelen))
             return var;
     }
     return NULL;
@@ -119,29 +128,81 @@ LVar *defined_char_var() {
     return lvar;
 }
 
-Node *define_struct() {
+LVar *defined_local_struct() {
+    LVar *lvar = calloc(1, sizeof(LVar));
+    Token *struct_name_tok = consume_indent();
+
+    Type *top = calloc(1, sizeof(Type));
+    top->ptr_to = calloc(1, sizeof(Type));
+    Type *tmp = top->ptr_to;
+    while (consume("*")) {
+        // ポインタ型を定義する
+        tmp->ty = PTR;
+        tmp->ptr_to = calloc(1, sizeof(Type));
+        tmp = tmp->ptr_to;
+    }
+    tmp->ty = CHAR;
+    tmp->ptr_to = NULL;
+    top = top->ptr_to;
+    
     Token *tok = consume_indent();
-    LVar *variabls = NULL;
+
+    Node *struct_node = find_defined_structs(struct_name_tok);
+    Type *ty = calloc(1, sizeof(Type));
+    ty->ty = STRUCT;
+    lvar->name = struct_name_tok->str;
+    lvar->len = struct_name_tok->len;
+    lvar->offset = struct_node->offset;
+    lvar->type = ty;
+}
+
+Node *defined_struct() {
+    Token *tok = consume_indent();
+    int offset = 0;
+    Node *variabls = NULL;
     expect("{");
     while (!consume("}")) {
         if (consume_kind(TK_INT)) {
             LVar *lvar = defined_int_var();
-            lvar->next = variabls;
-            variabls = lvar;
+            Node *lvar_node = calloc(1, sizeof(Node));
+            lvar_node->kind = ND_LVAR;
+            lvar_node->offset = lvar->offset;
+            lvar_node->name = lvar->name;
+            lvar_node->namelen = lvar->len;
+            lvar_node->child = variabls;
+            variabls = lvar_node;
+            offset += lvar->offset;
             expect(";");
         } else if (consume_kind(TK_CHAR)) {
             LVar *lvar = defined_char_var();
-            lvar->next = variabls;
-            variabls = lvar;
+            Node *lvar_node = calloc(1, sizeof(Node));
+            lvar_node->kind = ND_LVAR;
+            lvar_node->offset = lvar->offset;
+            lvar_node->name = lvar->name;
+            lvar_node->namelen = lvar->len;
+            lvar_node->child = variabls;
+            variabls = lvar_node;
+            offset += lvar->offset;
             expect(";");
         }
     }
     expect(";");
     Node *node = calloc(1, sizeof(Node));
-    node->struct_lvar = variabls;
-    node->kind = ND_STRUCT;
+    node->child = variabls;
+    node->kind = ND_STRUCTDEF;
     node->name = tok->str;
     node->namelen = tok->len;
+    node->offset = offset;
+
+    Node *defined_struct_node = calloc(1, sizeof(Node));
+    defined_struct_node->child = variabls;
+    defined_struct_node->kind = ND_STRUCTDEF;
+    defined_struct_node->name = tok->str;
+    defined_struct_node->namelen = tok->len;
+    defined_struct_node->offset = offset;
+    defined_struct_node->child = defined_structs;
+    defined_structs = defined_struct_node;
+
     return node;
 }
 
@@ -182,7 +243,7 @@ void program() {
 
 Node *define_function_gvar() {
     if (consume_kind(TK_STRUCT)) {
-        return define_struct();
+        return defined_struct();
     }
     locals = NULL;
     locals_num = 0;
@@ -334,6 +395,13 @@ Node *stmt() {
         return node;
     } else if (consume_kind(TK_CHAR)) {
         LVar *lvar = defined_char_var();
+        lvar->next = locals;
+        locals = lvar;
+        expect(";");
+        node = new_node_num(0);
+        return node;
+    } else if(consume_kind(TK_STRUCT)) {
+        LVar *lvar = defined_local_struct();
         lvar->next = locals;
         locals = lvar;
         expect(";");

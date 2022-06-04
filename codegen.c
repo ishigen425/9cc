@@ -205,7 +205,24 @@ void gen(Node *node) {
         }
         printf("    .byte 0\n");
         return;
-    case ND_STRUCT:
+    case ND_STRUCTDEF:
+        return;
+    case ND_STRUCTREF:
+        // printf("    mov rax, rbp\n");
+        // printf("    sub rax, %d\n", node->offset);
+        // printf("    push rax\n");
+        // for(Node *var = node->child; var; var = var->next) {
+        //     if (node->namelen == var->len && !memcmp(node->name, var->name, var->len)) {
+        //         gen_variable(var);
+        //     }
+        // }
+        // printf("    pop rax\n");
+        // if (node->type != NULL && node->type->ty == CHAR) {
+        //     printf("    movzx ecx, [rax]\n");
+        // } else {
+        //     printf("    mov rax, [rax]\n");
+        // }
+        // printf("    push rax\n");
         return;
     }
 

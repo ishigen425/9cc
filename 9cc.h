@@ -27,7 +27,8 @@ typedef enum {
     ND_GVARREF, // グローバル変数の参照
     ND_LITERAL, // リテラル文字
     ND_LITERALREF, // リテラル文字の参照
-    ND_STRUCT,
+    ND_STRUCTDEF, // define struct
+    ND_STRUCTREF, // reference to struct
 } NodeKind;
 
 typedef struct Type Type;
@@ -37,6 +38,7 @@ typedef enum {
     PTR,
     ARRAY,
     CHAR,
+    STRUCT,
 } TypeKind;
 
 struct Type {
@@ -68,13 +70,12 @@ struct Node {
     Node *child;    // ブロックで使う
     Node *arg[6];   // 引数の参照を持つ
     int val;        // kindがND_NUMの場合のみ使う
-    int offset;     // kindがND_LVARの場合のみ使う
+    int offset;     // kindがND_LVAR,ND_STRUCTDEFの場合のみ使う
     char *name;     // kindがND_DEF_FUNCTIONの場合のみ使う
     int namelen;    // kindがND_DEF_FUNCTIONの場合のみ使う
     int argnum;     // 引数の個数
     Type *type;      // kindがND_LVARの場合のみ使う
     int localsnum;  // ローカル変数の個数
-    LVar *struct_lvar; // structでの変数
 };
 
 // トークンの種類
