@@ -7,11 +7,9 @@
 #include "9cc.h"
 
 LVar *locals;
-int locals_num;
 GVar *globals;
 GVar *literals;
 Node *defined_structs;
-LVar *declared_structs;
 int literals_def_idx = 0;
 
 LVar *find_lvar(Token *tok) {
@@ -41,14 +39,6 @@ GVar *find_gvar_literals(Token *tok) {
 Node *find_defined_structs(Token *tok) {
     for (Node *var = defined_structs; var; var = var->child) {
         if (var->namelen == tok->len && !memcmp(tok->str, var->name, var->namelen))
-            return var;
-    }
-    return NULL;
-}
-
-LVar *find_declared_structs(Token *tok) {
-    for (LVar *var = declared_structs; var; var = var->next) {
-        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
             return var;
     }
     return NULL;
@@ -89,15 +79,9 @@ LVar *defined_int_var(){
         tmp->array_size = expect_number();
         expect("]");
         lvar->type = tmp;
-        if (tmp->ptr_to->ty == INT){
-            locals_num += tmp->array_size;
-        } else {
-            locals_num += tmp->array_size;
-        }
         lvar->offset = next_offset() + (tmp->array_size-1) * 8;
     } else {
         lvar->type = top;
-        locals_num++;
         lvar->offset = next_offset();
     }
     return lvar;
@@ -129,10 +113,8 @@ LVar *defined_char_var() {
         tmp->array_size = expect_number();
         expect("]");
         lvar->type = tmp;
-        locals_num += tmp->array_size;
     } else {
         lvar->type = top;
-        locals_num++;
     }
     return lvar;
 }
@@ -150,7 +132,7 @@ LVar *declare_structs() {
         tmp->ptr_to = calloc(1, sizeof(Type));
         tmp = tmp->ptr_to;
     }
-    tmp->ty = CHAR;
+    tmp->ty = STRUCT;
     tmp->ptr_to = NULL;
     top = top->ptr_to;
     
@@ -163,7 +145,7 @@ LVar *declare_structs() {
     ty->type_name_len = struct_node->namelen;
     lvar->name = tok->str;
     lvar->len = tok->len;
-    lvar->offset = struct_node->offset;
+    lvar->offset = next_offset() + struct_node->offset;
     lvar->type = ty;
     return lvar;
 }
@@ -171,6 +153,7 @@ LVar *declare_structs() {
 Node *defined_struct() {
     Token *tok = consume_indent();
     int offset = 0;
+    int localnum = 0;
     Node *variabls = NULL;
     expect("{");
     while (!consume("}")) {
@@ -184,9 +167,6 @@ Node *defined_struct() {
             lvar_node->child = variabls;
             variabls = lvar_node;
             offset += lvar->offset;
-            while (offset % 16 != 0) {
-                offset++;
-            }
             expect(";");
         } else if (consume_kind(TK_CHAR)) {
             LVar *lvar = defined_char_var();
@@ -198,9 +178,6 @@ Node *defined_struct() {
             lvar_node->child = variabls;
             variabls = lvar_node;
             offset += lvar->offset;
-            while (offset % 16 != 0) {
-                offset++;
-            }
             expect(";");
         }
     }
@@ -257,7 +234,6 @@ Node *define_function_gvar() {
         return defined_struct();
     }
     locals = NULL;
-    locals_num = 0;
     char t[64];
     TypeKind ty;
     if (consume_kind(TK_INT))
@@ -294,7 +270,7 @@ Node *define_function_gvar() {
         }
         func_node->argnum = argnum;
         func_node->lhs = stmt();
-        func_node->localsnum = locals_num;
+        func_node->offset = next_offset();
         return func_node;
     } else {
         Type *top = calloc(1, sizeof(Type));
@@ -413,8 +389,8 @@ Node *stmt() {
         return node;
     } else if(consume_kind(TK_STRUCT)) {
         LVar *lvar = declare_structs();
-        lvar->next = declared_structs;
-        declared_structs = lvar;
+        lvar->next = locals;
+        locals = lvar;
         expect(";");
         node = new_node_num(0);
         return node;
@@ -591,19 +567,37 @@ Node *primary() {
 
         LVar *lvar = find_lvar(tok);
         GVar *gvar = find_gvar(tok);
-        LVar *struct_var = find_declared_structs(tok);
         if(lvar) {
-            node->kind = ND_LVAR;
-            node->offset = lvar->offset;
-            node->type = lvar->type;
-            arg_type = lvar->type;
-            if (consume("[")){
-                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
-                expect("]");
-                return node;
-            }
-            if (lvar->type != NULL && lvar->type->ty == ARRAY) {
-                return new_binary(ND_ADDR, node, NULL);
+            if (lvar->type != NULL && lvar->type->ty == STRUCT){
+                node->kind = ND_LVAR;
+                node->name = lvar->name;
+                node->namelen = lvar->len;
+                Token *struct_type_token = calloc(1, sizeof(Token));
+                struct_type_token->str = lvar->type->type_name;
+                struct_type_token->len = lvar->type->type_name_len;
+                int offset = lvar->offset;
+                Node *defined_struct_node = find_defined_structs(struct_type_token);
+                if (consume("->")){
+                    Token *tok = consume_indent();
+                    for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
+                        if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
+                            offset += struct_node_var->offset;
+                    }
+                }
+                node->offset = offset;
+            }else{
+                node->kind = ND_LVAR;
+                node->offset = lvar->offset;
+                node->type = lvar->type;
+                arg_type = lvar->type;
+                if (consume("[")){
+                    node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
+                    expect("]");
+                    return node;
+                }
+                if (lvar->type != NULL && lvar->type->ty == ARRAY) {
+                    return new_binary(ND_ADDR, node, NULL);
+                }
             }
         } else if(gvar) {
             node->kind = ND_GVARREF;
@@ -617,23 +611,6 @@ Node *primary() {
             if (gvar->type != NULL && gvar->type->ty == ARRAY) {
                 return new_binary(ND_ADDR, node, NULL);
             }
-        } else if(struct_var) {
-            node->kind = ND_LVAR;
-            node->name = struct_var->name;
-            node->namelen = struct_var->len;
-            Token *struct_type_token = calloc(1, sizeof(Token));
-            struct_type_token->str = struct_var->type->type_name;
-            struct_type_token->len = struct_var->type->type_name_len;
-            int offset = struct_var->offset;
-            Node *defined_struct_node = find_defined_structs(struct_type_token);
-            if (consume("->")){
-                Token *tok = consume_indent();
-                for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
-                    if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
-                        offset += struct_node_var->offset;
-                }
-            }
-            node->offset = offset;
         } else {
             char t[64];
             mysubstr(t, tok->str, 0, tok->len);

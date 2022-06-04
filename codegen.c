@@ -150,7 +150,7 @@ void gen(Node *node) {
         printf("    push rbp\n");
         printf("    mov rbp, rsp\n");
         // 変数の領域確保
-        int variable_space = (node->argnum + node->localsnum) * 8;
+        int variable_space = (node->argnum) * 8  + node->offset;
         if (variable_space % 16 != 0) variable_space += 8;
         printf("    sub rsp, %d\n", variable_space);
         for(int i = 0; i < node->argnum; i++) {
