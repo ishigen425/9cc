@@ -196,6 +196,7 @@ assert 0 'test_file/struct/testa.c'
 assert 0 'test_file/struct/testb.c'
 assert 1 'test_file/struct/testc.c'
 assert 3 'test_file/struct/testd.c'
+assert 7 'test_file/struct/teste.c'
 
 echo OK
 
