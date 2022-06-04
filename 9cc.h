@@ -28,7 +28,6 @@ typedef enum {
     ND_LITERAL, // リテラル文字
     ND_LITERALREF, // リテラル文字の参照
     ND_STRUCTDEF, // define struct
-    ND_STRUCTREF, // reference to struct
 } NodeKind;
 
 typedef struct Type Type;
@@ -43,6 +42,8 @@ typedef enum {
 
 struct Type {
     TypeKind ty;
+    char *type_name;
+    int type_name_len;
     struct Type *ptr_to;
     size_t array_size;
 };

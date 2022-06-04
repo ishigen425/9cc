@@ -194,6 +194,7 @@ assert 1 'test_file/comment/test.c'
 
 assert 0 'test_file/struct/testa.c'
 assert 0 'test_file/struct/testb.c'
+assert 1 'test_file/struct/testc.c'
 
 echo OK
 
