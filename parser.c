@@ -639,6 +639,13 @@ Node *primary() {
         token = token->next;
         return new_binary(ND_ADDR, node, NULL);
     }
+    if (token->kind == TK_STRUCT) {
+        if(consume_kind(TK_STRUCT)){
+            Token *struct_type_token = consume_indent();
+            Node *defined_struct_node = find_defined_structs(struct_type_token);
+            return new_node_num(defined_struct_node->offset);
+        }
+    }
 
     return new_node_num(expect_number());
 }
