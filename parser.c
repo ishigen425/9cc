@@ -589,7 +589,7 @@ Node *primary() {
                     if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
                         offset += struct_node_var->offset;
                 }
-                return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(offset), new_node_num(1))), NULL);
+                return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_node_num(offset)), NULL);
             }
         } else if(gvar) {
             node->kind = ND_GVARREF;
