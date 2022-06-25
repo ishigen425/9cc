@@ -591,6 +591,17 @@ Node *primary() {
                 }
                 return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_node_num(offset)), NULL);
             }
+            if (consume(".")) {
+                Token *struct_type_token = calloc(1, sizeof(Token));
+                struct_type_token->str = lvar->type->type_name;
+                struct_type_token->len = lvar->type->type_name_len;
+                Node *defined_struct_node = find_defined_structs(struct_type_token);
+                Token *tok = consume_indent();
+                for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
+                    if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
+                        node->offset += struct_node_var->offset;
+                }
+            }
         } else if(gvar) {
             node->kind = ND_GVARREF;
             node->name = gvar->name;
