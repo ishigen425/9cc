@@ -120,8 +120,8 @@ LVar *defined_char_var() {
 }
 
 LVar *declare_structs() {
-    LVar *lvar = calloc(1, sizeof(LVar));
     Token *struct_name_tok = consume_indent();
+    Node *struct_node = find_defined_structs(struct_name_tok);
 
     Type *top = calloc(1, sizeof(Type));
     top->ptr_to = calloc(1, sizeof(Type));
@@ -134,19 +134,17 @@ LVar *declare_structs() {
     }
     tmp->ty = STRUCT;
     tmp->ptr_to = NULL;
+    tmp->type_name = struct_node->name;
+    tmp->type_name_len = struct_node->namelen;
     top = top->ptr_to;
     
     Token *tok = consume_indent();
 
-    Node *struct_node = find_defined_structs(struct_name_tok);
-    Type *ty = calloc(1, sizeof(Type));
-    ty->ty = STRUCT;
-    ty->type_name = struct_node->name;
-    ty->type_name_len = struct_node->namelen;
+    LVar *lvar = calloc(1, sizeof(LVar));
     lvar->name = tok->str;
     lvar->len = tok->len;
     lvar->offset = next_offset() + struct_node->offset;
-    lvar->type = ty;
+    lvar->type = top;
     return lvar;
 }
 
@@ -528,7 +526,7 @@ Node *unary(){
         }
         arg_type = NULL;
         return node;
-    }   
+    }
     return primary();
 }
 
@@ -568,36 +566,30 @@ Node *primary() {
         LVar *lvar = find_lvar(tok);
         GVar *gvar = find_gvar(tok);
         if(lvar) {
-            if (lvar->type != NULL && lvar->type->ty == STRUCT){
-                node->kind = ND_LVAR;
-                node->name = lvar->name;
-                node->namelen = lvar->len;
+            node->kind = ND_LVAR;
+            node->offset = lvar->offset;
+            node->type = lvar->type;
+            arg_type = lvar->type;
+            if (consume("[")){
+                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
+                expect("]");
+                return node;
+            }
+            if (lvar->type != NULL && lvar->type->ty == ARRAY) {
+                return new_binary(ND_ADDR, node, NULL);
+            }
+            if (consume("->")){
                 Token *struct_type_token = calloc(1, sizeof(Token));
-                struct_type_token->str = lvar->type->type_name;
-                struct_type_token->len = lvar->type->type_name_len;
-                int offset = lvar->offset;
+                struct_type_token->str = lvar->type->ptr_to->type_name;
+                struct_type_token->len = lvar->type->ptr_to->type_name_len;
+                int offset = 0;
                 Node *defined_struct_node = find_defined_structs(struct_type_token);
-                if (consume("->")){
-                    Token *tok = consume_indent();
-                    for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
-                        if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
-                            offset += struct_node_var->offset;
-                    }
+                Token *tok = consume_indent();
+                for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
+                    if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
+                        offset += struct_node_var->offset;
                 }
-                node->offset = offset;
-            }else{
-                node->kind = ND_LVAR;
-                node->offset = lvar->offset;
-                node->type = lvar->type;
-                arg_type = lvar->type;
-                if (consume("[")){
-                    node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
-                    expect("]");
-                    return node;
-                }
-                if (lvar->type != NULL && lvar->type->ty == ARRAY) {
-                    return new_binary(ND_ADDR, node, NULL);
-                }
+                return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(offset), new_node_num(1))), NULL);
             }
         } else if(gvar) {
             node->kind = ND_GVARREF;

@@ -5,6 +5,7 @@ struct test {
 };
 int main() {
     struct test *t;
+    t = calloc(1, 12);
     t->x = 1;
     t->y = 2;
     t->z = 4;

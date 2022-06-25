@@ -158,6 +158,7 @@ assert 4 'test_file/sizeof/testab.c'
 assert 4 'test_file/sizeof/testac.c'
 assert 8 'test_file/sizeof/testad.c'
 assert 8 'test_file/sizeof/testae.c'
+assert 8 'test_file/sizeof/testaf.c'
 
 assert 2 'test_file/array/testaa.c'
 assert 3 'test_file/array/testab.c'
@@ -195,7 +196,7 @@ assert 1 'test_file/comment/test.c'
 assert 0 'test_file/struct/testa.c'
 assert 0 'test_file/struct/testb.c'
 assert 1 'test_file/struct/testc.c'
-assert 3 'test_file/struct/testd.c'
+assert 6 'test_file/struct/testd.c'
 assert 7 'test_file/struct/teste.c'
 
 echo OK
