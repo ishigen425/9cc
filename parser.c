@@ -54,7 +54,7 @@ bool at_eof() {
     return token->kind == TK_EOF;
 }
 
-LVar *defined_lvar(TypeKind kind, int kind_size){
+LVar *declared_lvar(TypeKind kind, int kind_size){
     Type *top = calloc(1, sizeof(Type));
     top->ptr_to = calloc(1, sizeof(Type));
     Type *tmp = top->ptr_to;
@@ -118,15 +118,14 @@ LVar *declare_structs() {
     return lvar;
 }
 
-Node *defined_struct() {
-    Token *tok = consume_indent();
+Node *defined_struct(Token *tok) {
     int offset = 0;
     int localnum = 0;
     Node *variabls = NULL;
     expect("{");
     while (!consume("}")) {
         if (consume_kind(TK_INT)) {
-            LVar *lvar = defined_lvar(INT, 8);
+            LVar *lvar = declared_lvar(INT, 8);
             Node *lvar_node = calloc(1, sizeof(Node));
             lvar_node->kind = ND_LVAR;
             lvar_node->offset = offset;
@@ -137,7 +136,7 @@ Node *defined_struct() {
             offset += lvar->offset;
             expect(";");
         } else if (consume_kind(TK_CHAR)) {
-            LVar *lvar = defined_lvar(CHAR, 1);
+            LVar *lvar = declared_lvar(CHAR, 1);
             Node *lvar_node = calloc(1, sizeof(Node));
             lvar_node->kind = ND_LVAR;
             lvar_node->offset = offset;
@@ -160,6 +159,109 @@ Node *defined_struct() {
     defined_structs = defined_struct_node;
 
     return defined_struct_node;
+}
+
+Node *declared_gvar(Token *tok, TokenKind ty) {
+    Type *top = calloc(1, sizeof(Type));
+    top->ptr_to = calloc(1, sizeof(Type));
+    Type *tmp = top->ptr_to;
+    while (consume("*")) {
+        // ポインタ型を定義する
+        tmp->ty = PTR;
+        tmp->ptr_to = calloc(1, sizeof(Type));
+        tmp = tmp->ptr_to;
+        tok = consume_indent();
+    }
+    tmp->ty = ty;
+    tmp->ptr_to = NULL;
+    top = top->ptr_to;
+    GVar *gvar = calloc(1, sizeof(LVar));
+    gvar->next = globals;
+    gvar->name = tok->str;
+    gvar->len = tok->len;
+    if (consume("[")) {
+        tmp = calloc(1, sizeof(Type));
+        tmp->ptr_to = top;
+        tmp->ty = ARRAY;
+        tmp->array_size = expect_number();
+        expect("]");
+        gvar->type = tmp;
+    } else {
+        gvar->type = top;
+    }
+    globals = gvar;
+    expect(";");
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_GVARDEF;
+    node->type = gvar->type;
+    node->name = gvar->name;
+    node->namelen = gvar->len;
+    if (ty == INT) node->offset = 8;
+    else if (ty == CHAR) node->offset = 1;
+    if (tmp->ty == ARRAY) {
+        node->offset *= tmp->array_size;
+    }
+    return node;
+}
+
+Node *declared_structs_gvar(Token *tok, TokenKind ty) {
+    char *tokname = calloc(100, 1);
+    int namelen = tok->len;
+    memcpy(tokname, tok->str, namelen);
+    Type *top = calloc(1, sizeof(Type));
+    top->ptr_to = calloc(1, sizeof(Type));
+    Type *tmp = top->ptr_to;
+    while (consume("*")) {
+        // ポインタ型を定義する
+        tmp->ty = PTR;
+        tmp->ptr_to = calloc(1, sizeof(Type));
+        tmp = tmp->ptr_to;
+        tok = consume_indent();
+    }
+    tmp->ty = ty;
+    tmp->type_name = tokname;
+    tmp->type_name_len = namelen;
+    tmp->ptr_to = NULL;
+    top = top->ptr_to;
+
+    GVar *gvar = calloc(1, sizeof(GVar));
+    gvar->next = globals;
+    gvar->name = tok->str;
+    gvar->len = tok->len;
+    if (top->ty == STRUCT) {
+        Token *struct_tok = consume_indent();
+        gvar->name = struct_tok->str;
+        gvar->len = struct_tok->len;
+    }
+    if (consume("[")) {
+        tmp = calloc(1, sizeof(Type));
+        tmp->ptr_to = top;
+        tmp->ty = ARRAY;
+        tmp->array_size = expect_number();
+        expect("]");
+        gvar->type = tmp;
+    } else {
+        gvar->type = top;
+    }
+    globals = gvar;
+    expect(";");
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_GVARDEF;
+    node->type = gvar->type;
+    node->name = gvar->name;
+    node->namelen = gvar->len;
+    if (node->type->ty == INT) node->offset = 8;
+    else if (node->type->ty == CHAR) node->offset = 1;
+    if (node->type->ty == ARRAY) {
+        node->offset *= tmp->array_size;
+    } else if (node->type->ty == STRUCT) {
+        Token *search_tok = calloc(1, sizeof(Token));
+        search_tok->str = tokname;
+        search_tok->len = namelen;
+        Node *defined_struct_node = find_defined_structs(search_tok);
+        node->offset = defined_struct_node->offset;
+    }
+    return node;
 }
 
 Node *new_node(NodeKind kind) {
@@ -206,8 +308,11 @@ Node *define_function_gvar() {
     if (consume_kind(TK_CHAR))
         ty = CHAR;
     if (consume_kind(TK_STRUCT)) {
-        ty = STRUCT;
-        return defined_struct();
+        Token *tok = consume_indent();
+        if (find_defined_structs(tok) != NULL) {
+            return declared_structs_gvar(tok, STRUCT);
+        }
+        return defined_struct(tok);
     }
     Token *tok = consume_indent();
     if (consume("(")) {
@@ -242,41 +347,7 @@ Node *define_function_gvar() {
         func_node->offset = next_offset();
         return func_node;
     } else {
-        Type *top = calloc(1, sizeof(Type));
-        top->ptr_to = calloc(1, sizeof(Type));
-        Type *tmp = top->ptr_to;
-        while (consume("*")) {
-            // ポインタ型を定義する
-            tmp->ty = PTR;
-            tmp->ptr_to = calloc(1, sizeof(Type));
-            tmp = tmp->ptr_to;
-            tok = consume_indent();
-        }
-        tmp->ty = ty;
-        tmp->ptr_to = NULL;
-        top = top->ptr_to;
-        GVar *gvar = calloc(1, sizeof(LVar));
-        gvar->next = globals;
-        gvar->name = tok->str;
-        gvar->len = tok->len;
-        if (consume("[")) {
-            tmp = calloc(1, sizeof(Type));
-            tmp->ptr_to = top;
-            tmp->ty = ARRAY;
-            tmp->array_size = expect_number();
-            expect("]");
-            gvar->type = tmp;
-        } else {
-            gvar->type = top;
-        }
-        globals = gvar;
-        expect(";");
-        Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_GVARDEF;
-        node->type = gvar->type;
-        node->name = gvar->name;
-        node->namelen = gvar->len;
-        return node;
+        return declared_gvar(tok, ty);
     }
 }
 
@@ -343,14 +414,14 @@ Node *stmt() {
         expect(";");
         return node;
     } else if (consume_kind(TK_INT)) {
-        LVar *lvar = defined_lvar(INT, 8);
+        LVar *lvar = declared_lvar(INT, 8);
         lvar->next = locals;
         locals = lvar;
         expect(";");
         node = new_node_num(0);
         return node;
     } else if (consume_kind(TK_CHAR)) {
-        LVar *lvar = defined_lvar(CHAR, 1);
+        LVar *lvar = declared_lvar(CHAR, 1);
         lvar->next = locals;
         locals = lvar;
         expect(";");
@@ -584,6 +655,32 @@ Node *primary() {
             }
             if (gvar->type != NULL && gvar->type->ty == ARRAY) {
                 return new_binary(ND_ADDR, node, NULL);
+            }
+            if (consume("->")){
+                Token *struct_type_token = calloc(1, sizeof(Token));
+                struct_type_token->str = gvar->type->ptr_to->type_name;
+                struct_type_token->len = gvar->type->ptr_to->type_name_len;
+                int offset = 0;
+                Node *defined_struct_node = find_defined_structs(struct_type_token);
+                Token *tok = consume_indent();
+                for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
+                    if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
+                        offset += struct_node_var->offset;
+                }
+                return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_node_num(offset)), NULL);
+            }
+            if (consume(".")) {
+                Token *struct_type_token = calloc(1, sizeof(Token));
+                struct_type_token->str = gvar->type->type_name;
+                struct_type_token->len = gvar->type->type_name_len;
+                Node *defined_struct_node = find_defined_structs(struct_type_token);
+                Token *tok = consume_indent();
+                int offset = 0;
+                for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
+                    if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
+                        offset += struct_node_var->offset;
+                }
+                return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_node_num(offset)), NULL);
             }
         } else {
             char t[64];
