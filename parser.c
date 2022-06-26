@@ -54,7 +54,7 @@ bool at_eof() {
     return token->kind == TK_EOF;
 }
 
-LVar *defined_int_var(){
+LVar *defined_lvar(TypeKind kind, int kind_size){
     Type *top = calloc(1, sizeof(Type));
     top->ptr_to = calloc(1, sizeof(Type));
     Type *tmp = top->ptr_to;
@@ -64,7 +64,7 @@ LVar *defined_int_var(){
         tmp->ptr_to = calloc(1, sizeof(Type));
         tmp = tmp->ptr_to;
     }
-    tmp->ty = INT;
+    tmp->ty = kind;
     tmp->ptr_to = NULL;
     top = top->ptr_to;
     
@@ -79,7 +79,8 @@ LVar *defined_int_var(){
         tmp->array_size = expect_number();
         expect("]");
         lvar->type = tmp;
-        lvar->offset = next_offset() + (tmp->array_size-1) * 8;
+        lvar->offset = next_offset() + (tmp->array_size-1) * kind_size;
+        lvar->offset += ((tmp->array_size-1) / 8 + 1) * 8;
     } else {
         lvar->type = top;
         lvar->offset = next_offset();
@@ -87,37 +88,6 @@ LVar *defined_int_var(){
     return lvar;
 }
 
-LVar *defined_char_var() {
-    Type *top = calloc(1, sizeof(Type));
-    top->ptr_to = calloc(1, sizeof(Type));
-    Type *tmp = top->ptr_to;
-    while (consume("*")) {
-        // ポインタ型を定義する
-        tmp->ty = PTR;
-        tmp->ptr_to = calloc(1, sizeof(Type));
-        tmp = tmp->ptr_to;
-    }
-    tmp->ty = CHAR;
-    tmp->ptr_to = NULL;
-    top = top->ptr_to;
-    
-    Token *tok = consume_indent();
-    LVar *lvar = calloc(1, sizeof(LVar));
-    lvar->name = tok->str;
-    lvar->len = tok->len;
-    lvar->offset = next_offset();
-    if (consume("[")) {
-        tmp = calloc(1, sizeof(Type));
-        tmp->ptr_to = top;
-        tmp->ty = ARRAY;
-        tmp->array_size = expect_number();
-        expect("]");
-        lvar->type = tmp;
-    } else {
-        lvar->type = top;
-    }
-    return lvar;
-}
 
 LVar *declare_structs() {
     Token *struct_name_tok = consume_indent();
@@ -156,7 +126,7 @@ Node *defined_struct() {
     expect("{");
     while (!consume("}")) {
         if (consume_kind(TK_INT)) {
-            LVar *lvar = defined_int_var();
+            LVar *lvar = defined_lvar(INT, 8);
             Node *lvar_node = calloc(1, sizeof(Node));
             lvar_node->kind = ND_LVAR;
             lvar_node->offset = offset;
@@ -167,7 +137,7 @@ Node *defined_struct() {
             offset += lvar->offset;
             expect(";");
         } else if (consume_kind(TK_CHAR)) {
-            LVar *lvar = defined_char_var();
+            LVar *lvar = defined_lvar(CHAR, 1);
             Node *lvar_node = calloc(1, sizeof(Node));
             lvar_node->kind = ND_LVAR;
             lvar_node->offset = offset;
@@ -228,9 +198,6 @@ void program() {
 }
 
 Node *define_function_gvar() {
-    while (consume_kind(TK_STRUCT)) {
-        return defined_struct();
-    }
     locals = NULL;
     char t[64];
     TypeKind ty;
@@ -238,6 +205,10 @@ Node *define_function_gvar() {
         ty = INT;
     if (consume_kind(TK_CHAR))
         ty = CHAR;
+    if (consume_kind(TK_STRUCT)) {
+        ty = STRUCT;
+        return defined_struct();
+    }
     Token *tok = consume_indent();
     if (consume("(")) {
         Node *func_node = calloc(1, sizeof(Node));
@@ -372,14 +343,14 @@ Node *stmt() {
         expect(";");
         return node;
     } else if (consume_kind(TK_INT)) {
-        LVar *lvar = defined_int_var();
+        LVar *lvar = defined_lvar(INT, 8);
         lvar->next = locals;
         locals = lvar;
         expect(";");
         node = new_node_num(0);
         return node;
     } else if (consume_kind(TK_CHAR)) {
-        LVar *lvar = defined_char_var();
+        LVar *lvar = defined_lvar(CHAR, 1);
         lvar->next = locals;
         locals = lvar;
         expect(";");
