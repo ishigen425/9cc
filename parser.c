@@ -124,29 +124,28 @@ Node *defined_struct(Token *tok) {
     Node *variabls = NULL;
     expect("{");
     while (!consume("}")) {
+        LVar *lvar = calloc(1, sizeof(LVar));
         if (consume_kind(TK_INT)) {
-            LVar *lvar = declared_lvar(INT, 8);
-            Node *lvar_node = calloc(1, sizeof(Node));
-            lvar_node->kind = ND_LVAR;
-            lvar_node->offset = offset;
-            lvar_node->name = lvar->name;
-            lvar_node->namelen = lvar->len;
-            lvar_node->child = variabls;
-            variabls = lvar_node;
-            offset += lvar->offset;
-            expect(";");
+            lvar = declared_lvar(INT, 8);
         } else if (consume_kind(TK_CHAR)) {
-            LVar *lvar = declared_lvar(CHAR, 1);
-            Node *lvar_node = calloc(1, sizeof(Node));
-            lvar_node->kind = ND_LVAR;
-            lvar_node->offset = offset;
-            lvar_node->name = lvar->name;
-            lvar_node->namelen = lvar->len;
-            lvar_node->child = variabls;
-            variabls = lvar_node;
-            offset += lvar->offset;
-            expect(";");
+            lvar = declared_lvar(CHAR, 1);
+        } else if (consume_kind(TK_STRUCT)) {
+            Token *child_tok = consume_indent();
+            Node *childe_struct_node = find_defined_structs(child_tok);
+            lvar = declared_lvar(STRUCT, childe_struct_node->offset);
+        } else {
+            lvar = calloc(1, sizeof(LVar));
         }
+        Node *lvar_node = calloc(1, sizeof(Node));
+        lvar_node->kind = ND_LVAR;
+        lvar_node->offset = offset;
+        lvar_node->name = lvar->name;
+        lvar_node->namelen = lvar->len;
+        lvar_node->child = variabls;
+        variabls = lvar_node;
+        offset += lvar->offset;
+        expect(";");
+
     }
     expect(";");
     Node *defined_struct_node = calloc(1, sizeof(Node));
