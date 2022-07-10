@@ -84,6 +84,19 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        // ignore include
+        if (startswith(p, "#include \"")) {
+            while (!startswith(p, "\"")) p++;
+            p++;
+            continue;
+        }
+
+        if (startswith(p, "#include <")) {
+            while (!startswith(p, ">")) p++;
+            p++;
+            continue;
+        }
+
         // Multi-letter punctuator
         if (startswith(p, "==") || startswith(p, "!=") ||
             startswith(p, "<=") || startswith(p, ">=")) {
