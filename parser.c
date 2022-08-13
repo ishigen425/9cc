@@ -580,12 +580,12 @@ Node *primary() {
     }
 
     Token *tok = consume_indent();
-    Node *node = calloc(1, sizeof(Node));
     if (tok) {
 
         if(startswith(tok->next->str, "(")) {
             char t[64];
             mysubstr(t, tok->str, 0, tok->len);
+            Node *node = calloc(1, sizeof(Node));
             node->name = tok->str;
             node->namelen = tok->len;
             node->kind = ND_FUNCALL;
@@ -607,6 +607,7 @@ Node *primary() {
         LVar *lvar = find_lvar(tok);
         GVar *gvar = find_gvar(tok);
         if(lvar) {
+            Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
             node->type = lvar->type;
@@ -643,7 +644,9 @@ Node *primary() {
                         node->offset += struct_node_var->offset;
                 }
             }
+            return node;
         } else if(gvar) {
+            Node *node = calloc(1, sizeof(Node));
             node->kind = ND_GVARREF;
             node->name = gvar->name;
             node->namelen = gvar->len;
@@ -681,14 +684,16 @@ Node *primary() {
                 }
                 return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_node_num(offset)), NULL);
             }
+            return node;
         } else {
             char t[64];
             mysubstr(t, tok->str, 0, tok->len);
             error("%s is not defined.", t);
         }
-        return node;
+        return NULL;
     }
     if (token->kind == TK_STR) {
+        Node *node = calloc(1, sizeof(Node));
         GVar *gvar = calloc(1, sizeof(LVar));
         gvar->next = globals;
         gvar->name = token->str;
