@@ -28,6 +28,7 @@ typedef enum {
     ND_LITERAL, // リテラル文字
     ND_LITERALREF, // リテラル文字の参照
     ND_STRUCTDEF, // define struct
+    ND_STRUCTREF, // reference struct
 } NodeKind;
 
 typedef struct Type Type;

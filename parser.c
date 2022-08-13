@@ -567,6 +567,12 @@ Node *unary(){
     return primary();
 }
 
+Node *struct_ref() {
+    if (consume("->")) {
+        // not implement
+    }
+    return NULL;
+}
 
 Node *primary() {
     if (consume("(")) {
@@ -627,7 +633,13 @@ Node *primary() {
                     if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
                         offset += struct_node_var->offset;
                 }
-                return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_node_num(offset)), NULL);
+                Node *struct_ref_node = calloc(1, sizeof(Node));
+                struct_ref_node->offset = offset;
+                struct_ref_node->kind = ND_STRUCTREF;
+                struct_ref_node->lhs = struct_ref();
+                node->lhs = struct_ref_node;
+                node->type = NULL;
+                return node;
             }
             if (consume(".")) {
                 Token *struct_type_token = calloc(1, sizeof(Token));
@@ -654,7 +666,7 @@ Node *primary() {
             if (gvar->type != NULL && gvar->type->ty == ARRAY) {
                 return new_binary(ND_ADDR, node, NULL);
             }
-            if (consume("->")){
+            if (consume("->")) {
                 Token *struct_type_token = calloc(1, sizeof(Token));
                 struct_type_token->str = gvar->type->ptr_to->type_name;
                 struct_type_token->len = gvar->type->ptr_to->type_name_len;

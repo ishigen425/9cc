@@ -5,6 +5,7 @@
 int labelidx = 0;
 char *arglist[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
+// push variable address
 void gen_variable(Node *node) {
     if (node->kind == ND_LVAR){
         printf("    mov rax, rbp\n");
@@ -18,12 +19,17 @@ void gen_variable(Node *node) {
     } else if (node->kind == ND_LITERALREF) {
         printf("    lea rax, literal%d[rip]\n", node->offset);
         printf("    push rax\n");
+    } else if (node->kind == ND_STRUCTREF) {
+        printf("    pop rax\n");
+        printf("    sub rax, %d\n", node->offset);
+        printf("    push rax\n");
     } else {
         error("代入の左辺値が変数ではありません");
     }
 }
 
 void gen(Node *node) {
+    if (node == NULL) return;
     int lidx = labelidx++;
     Node *child = node->child;
     char t[64];
@@ -33,6 +39,9 @@ void gen(Node *node) {
         return;
     case ND_LVAR:
         gen_variable(node);
+        if (node->lhs != NULL && node->lhs->kind == ND_STRUCTREF) {
+            gen(node->lhs);
+        }
         printf("    pop rax\n");
         if (node->type != NULL && node->type->ty == CHAR) {
             printf("    movzx ecx, [rax]\n");
@@ -46,6 +55,9 @@ void gen(Node *node) {
             gen(node->lhs->lhs);
         }else{
             gen_variable(node->lhs);
+            if (node->lhs->lhs != NULL && node->lhs->lhs->kind == ND_STRUCTREF) {
+                gen(node->lhs->lhs);
+            }
         }
         gen(node->rhs);
 
@@ -201,6 +213,10 @@ void gen(Node *node) {
         printf("    .byte 0\n");
         return;
     case ND_STRUCTDEF:
+        return;
+    case ND_STRUCTREF:
+        gen_variable(node);
+        gen(node->lhs);
         return;
     }
 
