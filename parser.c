@@ -325,17 +325,13 @@ Node *define_function_gvar() {
             if(argnum >= 6)
                 error("not implementation error!");
             // 引数をローカル変数と同様に扱う
-            LVar *lvar = calloc(1, sizeof(LVar));
+            LVar *lvar = declared_lvar(INT, 8);
             Node *node = calloc(1, sizeof(Node));
-            lvar->next = locals;
-            lvar->name = token->str;
-            lvar->len = token->len;
-            lvar->offset = next_offset();
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
+            lvar->next = locals;
             locals = lvar;
             func_node->arg[argnum++] = node;
-            token = token->next;
             if(!consume(",")){
                 expect(")");
                 break;
