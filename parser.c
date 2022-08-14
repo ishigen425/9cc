@@ -101,6 +101,11 @@ Node *defined_struct(Token *tok) {
         } else if (consume_kind(TK_STRUCT)) {
             Token *child_tok = consume_indent();
             Node *childe_struct_node = find_defined_structs(child_tok);
+            if(childe_struct_node == NULL) {
+                char *t = calloc(50, sizeof(char));
+                mysubstr(t, child_tok->str, 0, child_tok->len);
+                error("%s is not defined.", t);
+            }
             lvar = declared_lvar(STRUCT, childe_struct_node->offset);
             lvar->type->type_name = child_tok->str;
             lvar->type->type_name_len = child_tok->len;
