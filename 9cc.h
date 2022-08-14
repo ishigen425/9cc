@@ -165,3 +165,4 @@ LVar *find_lvar(Token *tok);
 GVar *find_gvar(Token *tok);
 GVar *find_gvar_literals(Token *tok);
 Node *find_defined_structs(Token *tok);
+int get_struct_node_offset(Node *defined_struct_node, Token *tok);

@@ -63,3 +63,12 @@ int mysubstr( char *t, char *s, int pos, int len ) {
  bool is_struct_ref(NodeKind kind) {
     return kind == ND_STRUCTREF || kind == ND_STRUCTREF_PTR;
 }
+
+int get_struct_node_offset(Node *defined_struct_node, Token *tok) {
+    int offset = 0;
+    for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
+        if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
+            offset += struct_node_var->offset;
+    }
+    return offset;
+}
