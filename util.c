@@ -59,3 +59,7 @@ int mysubstr( char *t, char *s, int pos, int len ) {
  bool startswith(char *p, char *q) {
     return memcmp(p, q, strlen(q)) == 0;
  }
+
+ bool is_struct_ref(NodeKind kind) {
+    return kind == ND_STRUCTREF || kind == ND_STRUCTREF_PTR;
+}
