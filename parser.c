@@ -532,17 +532,20 @@ Node *unary(){
     if (consume_kind(TK_SIZEOF)){
         arg_type = NULL;
         Node *node = primary();
+        Node *ret_node = calloc(1, sizeof(Node));
         if (arg_type != NULL && arg_type->ty == PTR){
-            node = new_node_num(8);
+            ret_node = new_node_num(8);
         } else if (arg_type != NULL && arg_type->ty == ARRAY) {
-            node = new_node_num(arg_type->array_size);
+            ret_node = new_node_num(arg_type->array_size);
         } else if (arg_type != NULL && arg_type->ty == CHAR) {
-            node = new_node_num(1);
+            ret_node = new_node_num(1);
+        } else if (node->kind == ND_STRUCTDEF) {
+            ret_node = new_node_num(node->offset);
         } else {
-            node = new_node_num(4);
+            ret_node = new_node_num(4);
         }
         arg_type = NULL;
-        return node;
+        return ret_node;
     }
     return primary();
 }
@@ -743,7 +746,7 @@ Node *primary() {
         if(consume_kind(TK_STRUCT)){
             Token *struct_type_token = consume_indent();
             Node *defined_struct_node = find_defined_structs(struct_type_token);
-            return new_node_num(defined_struct_node->offset);
+            return defined_struct_node;
         }
     }
 
