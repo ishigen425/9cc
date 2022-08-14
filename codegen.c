@@ -195,7 +195,13 @@ void gen(Node *node) {
         return;
     case ND_GVARREF:
         mysubstr(t, node->name, 0, node->namelen);
-        printf("    mov rax, %s[rip]\n", t);
+        printf("    lea rax, %s[rip]\n", t);
+        printf("    push rax\n");
+        if (node->lhs != NULL && node->lhs->kind == ND_STRUCTREF) {
+            gen(node->lhs);
+        }
+        printf("    pop rax\n");
+        printf("    mov rax, [rax]\n");
         printf("    push rax\n");
         return;
     case ND_LITERAL:

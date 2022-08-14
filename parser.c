@@ -227,6 +227,8 @@ Node *declared_structs_gvar(Token *tok, TokenKind ty) {
         search_tok->len = namelen;
         Node *defined_struct_node = find_defined_structs(search_tok);
         node->offset = defined_struct_node->offset;
+    } else if (node->type->ty == PTR) {
+        node->offset = 8;
     }
     return node;
 }
@@ -660,7 +662,13 @@ Node *primary() {
                     if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
                         offset += struct_node_var->offset;
                 }
-                return new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_node_num(offset)), NULL);
+                Node *struct_ref_node = calloc(1, sizeof(Node));
+                struct_ref_node->offset = offset;
+                struct_ref_node->kind = ND_STRUCTREF;
+                struct_ref_node->lhs = struct_ref(defined_struct_node, tok);
+                node->lhs = struct_ref_node;
+                node->type = NULL;
+                return node;
             }
             if (consume(".")) {
                 Token *struct_type_token = calloc(1, sizeof(Token));

@@ -202,6 +202,7 @@ assert 7 'test_file/struct/teste.c'
 assert 6 'test_file/struct/testf.c'
 assert 42 'test_file/struct/testg.c'
 assert 12 'test_file/struct/testh.c'
+assert 12 'test_file/struct/testi.c'
 
 echo OK
 
