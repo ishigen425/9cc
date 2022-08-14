@@ -98,6 +98,8 @@ Node *defined_struct(Token *tok) {
             Token *child_tok = consume_indent();
             Node *childe_struct_node = find_defined_structs(child_tok);
             lvar = declared_lvar(STRUCT, childe_struct_node->offset);
+            lvar->type->type_name = child_tok->str;
+            lvar->type->type_name_len = child_tok->len;
         } else {
             lvar = calloc(1, sizeof(LVar));
         }
@@ -106,6 +108,7 @@ Node *defined_struct(Token *tok) {
         lvar_node->offset = offset;
         lvar_node->name = lvar->name;
         lvar_node->namelen = lvar->len;
+        lvar_node->type = lvar->type;
         lvar_node->child = variabls;
         variabls = lvar_node;
         offset += lvar->offset;
@@ -532,9 +535,24 @@ Node *unary(){
     return primary();
 }
 
-Node *struct_ref() {
+Node *struct_ref(Node *defined_struct_node, Token *left_token) {
     if (consume("->")) {
-        // not implement
+        int offset = 0;
+        Token *tok = consume_indent();
+        Token *next_struct_tok = calloc(1, sizeof(Token));
+        for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
+            if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
+                offset += struct_node_var->offset;
+                if(struct_node_var->type->ty == PTR) {
+                    next_struct_tok->str = struct_node_var->type->type_name;
+                    next_struct_tok->len = struct_node_var->type->type_name_len;
+                }
+        }
+        Node *struct_ref_node = calloc(1, sizeof(Node));
+        struct_ref_node->offset = offset;
+        struct_ref_node->kind = ND_STRUCTREF;
+        struct_ref_node->lhs = struct_ref(find_defined_structs(next_struct_tok), tok);
+        return struct_ref_node;
     }
     return NULL;
 }
@@ -601,7 +619,7 @@ Node *primary() {
                 Node *struct_ref_node = calloc(1, sizeof(Node));
                 struct_ref_node->offset = offset;
                 struct_ref_node->kind = ND_STRUCTREF;
-                struct_ref_node->lhs = struct_ref();
+                struct_ref_node->lhs = struct_ref(defined_struct_node, tok);
                 node->lhs = struct_ref_node;
                 node->type = NULL;
                 return node;

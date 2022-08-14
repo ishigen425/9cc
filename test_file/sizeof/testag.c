@@ -5,7 +5,7 @@ struct test {
 };
 int main() {
     struct test *t;
-    t = calloc(sizeof(struct test));
+    t = calloc(1, sizeof(struct test));
     t->x = 1;
     return t->x;
 }
