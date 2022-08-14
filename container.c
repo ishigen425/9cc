@@ -1,0 +1,35 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include "9cc.h"
+
+LVar *find_lvar(Token *tok) {
+    for (LVar *var = locals; var ; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    }
+    return NULL;
+}
+
+GVar *find_gvar(Token *tok) {
+    for (GVar *var = globals; var ; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    }
+    return NULL;
+}
+
+GVar *find_gvar_literals(Token *tok) {
+    for (GVar *var = literals; var ; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    }
+    return NULL;
+}
+
+Node *find_defined_structs(Token *tok) {
+    for (Node *var = defined_structs; var; var = var->child) {
+        if (var->namelen == tok->len && !memcmp(tok->str, var->name, var->namelen))
+            return var;
+    }
+    return NULL;
+}

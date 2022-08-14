@@ -152,3 +152,13 @@ void expect(char *op);
 void expect_type(char *op);
 
 char filename[100];
+
+LVar *locals;
+GVar *globals;
+GVar *literals;
+Node *defined_structs;
+
+LVar *find_lvar(Token *tok);
+GVar *find_gvar(Token *tok);
+GVar *find_gvar_literals(Token *tok);
+Node *find_defined_structs(Token *tok);
