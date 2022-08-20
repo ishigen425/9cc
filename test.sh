@@ -137,6 +137,7 @@ assert 21 'test_file/def_func/testae.c'
 assert 14 'test_file/def_func/testaf.c'
 assert 15 'test_file/def_func/testag.c'
 assert 22 'test_file/def_func/testah.c'
+assert 63 'test_file/def_func/testai.c'
 
 assert 3 'test_file/derefer_addr/testaa.c'
 assert 3 'test_file/derefer_addr/testab.c'

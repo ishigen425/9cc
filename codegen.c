@@ -48,8 +48,9 @@ void gen(Node *node) {
             gen(node->lhs);
         }
         printf("    pop rax\n");
-        if (node->type != NULL && node->type->ty == CHAR) {
-            printf("    movzx ecx, [rax]\n");
+        if ((node->type != NULL && node->type->ty == CHAR)
+            || (node->type != NULL && node->type->ty == BOOL)) {
+            printf("    movzx rax, BYTE PTR [rax]\n");
         } else {
             printf("    mov rax, [rax]\n");
         }

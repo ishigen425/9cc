@@ -328,11 +328,17 @@ Node *define_function_gvar() {
         func_node->namelen = tok->len;
         int argnum = 0;
         while(!consume(")")){
-            expect_type("int");
             if(argnum >= 6)
                 error("not implementation error!");
             // 引数をローカル変数と同様に扱う
-            LVar *lvar = declared_lvar(INT, 8);
+            LVar *lvar;
+            if (consume_kind(TK_INT)) {
+                lvar = declared_lvar(INT, 8);
+            } else if (consume_kind(TK_CHAR)) {
+                lvar = declared_lvar(CHAR, 1);
+            } else if (consume_kind(TK_BOOL)) {
+                lvar = declared_lvar(BOOL, 1);
+            }
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
