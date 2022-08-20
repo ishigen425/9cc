@@ -99,7 +99,7 @@ Node *defined_struct(Token *tok) {
         } else if (consume_kind(TK_CHAR)) {
             lvar = declared_lvar(CHAR, 1);
         } else if (consume_kind(TK_BOOL)) {
-            lvar = declared_lvar(CHAR, 1);
+            lvar = declared_lvar(BOOL, 1);
         } else if (consume_kind(TK_STRUCT)) {
             Token *child_tok = consume_indent();
             Node *childe_struct_node = find_defined_structs(child_tok);
