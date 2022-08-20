@@ -109,6 +109,18 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "true;") || startswith(p, "true ")) {
+            cur = new_token(TK_TRUE, cur, p, 4);
+            p += 4;
+            continue;
+        }
+
+        if (startswith(p, "false;") || startswith(p, "false ")) {
+            cur = new_token(TK_FALSE, cur, p, 5);
+            p += 5;
+            continue;
+        }
+
         // Multi-letter punctuator
         if (startswith(p, "==") || startswith(p, "!=") ||
             startswith(p, "<=") || startswith(p, ">=")) {
@@ -179,6 +191,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
 
         if (startswith(p, "char ")) {
             cur = new_token(TK_CHAR, cur, p, 4);
+            p += 4;
+            continue;
+        }
+
+        if (startswith(p, "bool ")) {
+            cur = new_token(TK_BOOL, cur, p, 4);
             p += 4;
             continue;
         }

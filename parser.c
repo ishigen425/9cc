@@ -98,6 +98,8 @@ Node *defined_struct(Token *tok) {
             lvar = declared_lvar(INT, 8);
         } else if (consume_kind(TK_CHAR)) {
             lvar = declared_lvar(CHAR, 1);
+        } else if (consume_kind(TK_BOOL)) {
+            lvar = declared_lvar(CHAR, 1);
         } else if (consume_kind(TK_STRUCT)) {
             Token *child_tok = consume_indent();
             Node *childe_struct_node = find_defined_structs(child_tok);
@@ -303,6 +305,8 @@ Node *define_function_gvar() {
         ty = INT;
     if (consume_kind(TK_CHAR))
         ty = CHAR;
+    if (consume_kind(TK_BOOL))
+        ty = BOOL;
     if (consume_kind(TK_STRUCT)) {
         Token *tok = consume_indent();
         if (find_defined_structs(tok) != NULL) {
@@ -420,6 +424,13 @@ Node *stmt() {
         return node;
     } else if (consume_kind(TK_CHAR)) {
         LVar *lvar = declared_lvar(CHAR, 1);
+        lvar->next = locals;
+        locals = lvar;
+        expect(";");
+        node = new_node_num(0);
+        return node;
+    } else if (consume_kind(TK_BOOL)) {
+        LVar *lvar = declared_lvar(BOOL, 1);
         lvar->next = locals;
         locals = lvar;
         expect(";");
@@ -758,6 +769,14 @@ Node *primary() {
             Node *defined_struct_node = find_defined_structs(struct_type_token);
             return defined_struct_node;
         }
+    }
+    if (token->kind == TK_TRUE) {
+        token = token->next;
+        return new_node_num(1);
+    }
+    if (token->kind == TK_FALSE) {
+        token = token->next;
+        return new_node_num(0);
     }
 
     return new_node_num(expect_number());

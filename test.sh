@@ -207,5 +207,11 @@ assert 26 'test_file/struct/testj.c'
 
 assert 20 'test_file/enum/testa.c'
 
+assert 1 'test_file/bool/testa.c'
+assert 0 'test_file/bool/testb.c'
+assert 5 'test_file/bool/testc.c'
+assert 2 'test_file/bool/testd.c'
+assert 1 'test_file/bool/teste.c'
+
 echo OK
 

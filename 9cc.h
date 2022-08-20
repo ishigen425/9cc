@@ -41,6 +41,7 @@ typedef enum {
     PTR,
     ARRAY,
     CHAR,
+    BOOL,
     STRUCT,
 } TypeKind;
 
@@ -101,6 +102,9 @@ typedef enum {
     TK_STRUCT,   // struct
     TK_TYPEDEF,  // typedef
     TK_ENUM,     // enum
+    TK_TRUE,     // true
+    TK_FALSE,    // false
+    TK_BOOL,     // bool
 } TokenKind;
 
 typedef struct Token Token;
