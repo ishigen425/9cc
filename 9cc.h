@@ -99,6 +99,8 @@ typedef enum {
     TK_CHAR,     // char
     TK_STR,      // string
     TK_STRUCT,   // struct
+    TK_TYPEDEF,  // typedef
+    TK_ENUM,     // enum
 } TokenKind;
 
 typedef struct Token Token;
@@ -118,6 +120,15 @@ struct GVar {
     char *name;
     int len;
     Type *type;     // 変数の型を保持する
+};
+
+typedef struct EnumDef EnumDef;
+
+struct EnumDef {
+    char *str;
+    int len;
+    int index;
+    EnumDef *next;
 };
 
 void tokenize(char *p);
@@ -160,9 +171,11 @@ LVar *locals;
 GVar *globals;
 GVar *literals;
 Node *defined_structs;
+EnumDef *defined_enums;
 
 LVar *find_lvar(Token *tok);
 GVar *find_gvar(Token *tok);
 GVar *find_gvar_literals(Token *tok);
 Node *find_defined_structs(Token *tok);
 int get_struct_node_offset(Node *defined_struct_node, Token *tok);
+int find_defined_enum(Token *tok);

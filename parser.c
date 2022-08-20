@@ -137,6 +137,23 @@ Node *defined_struct(Token *tok) {
     return defined_struct_node;
 }
 
+void *defined_enum() {
+    expect("{");
+    int index = 0;
+    while (!consume("}")) {
+        EnumDef *enum_def = calloc(1, sizeof(EnumDef));
+        Token *tok = consume_indent();
+        enum_def->str = tok->str;
+        enum_def->len = tok->len;
+        enum_def->index = index++;
+        enum_def->next = defined_enums;
+        defined_enums = enum_def;
+        expect(",");
+    }
+    Token *name = consume_indent();
+    expect(";");
+}
+
 Node *declared_gvar(Token *tok, TokenKind ty) {
     Type *top = calloc(1, sizeof(Type));
     top->ptr_to = calloc(1, sizeof(Type));
@@ -292,6 +309,12 @@ Node *define_function_gvar() {
             return declared_structs_gvar(tok, STRUCT);
         }
         return defined_struct(tok);
+    }
+    if (consume_kind(TK_TYPEDEF)) {
+        if (consume_kind(TK_ENUM)) {
+            defined_enum();
+            return calloc(1, sizeof(Node));
+        }
     }
     Token *tok = consume_indent();
     if (consume("(")) {
@@ -611,6 +634,7 @@ Node *primary() {
 
         LVar *lvar = find_lvar(tok);
         GVar *gvar = find_gvar(tok);
+        int enums_index = find_defined_enum(tok);
         if(lvar) {
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
@@ -700,6 +724,8 @@ Node *primary() {
                 return node;
             }
             return node;
+        } else if(enums_index >= 0) {
+            return new_node_num(enums_index);
         } else {
             char t[64];
             mysubstr(t, tok->str, 0, tok->len);

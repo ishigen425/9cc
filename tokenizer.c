@@ -97,6 +97,18 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "typedef ")) {
+            cur = new_token(TK_TYPEDEF, cur, p, 7);
+            p += 7;
+            continue;
+        }
+
+        if (startswith(p, "enum ")) {
+            cur = new_token(TK_ENUM, cur, p, 4);
+            p += 4;
+            continue;
+        }
+
         // Multi-letter punctuator
         if (startswith(p, "==") || startswith(p, "!=") ||
             startswith(p, "<=") || startswith(p, ">=")) {

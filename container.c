@@ -33,3 +33,12 @@ Node *find_defined_structs(Token *tok) {
     }
     return NULL;
 }
+
+int find_defined_enum(Token *tok) {
+    for (EnumDef *var = defined_enums; var; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->str, var->len)) {
+            return var->index;
+        }
+    }
+    return -1;
+}
