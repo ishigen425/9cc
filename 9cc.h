@@ -30,6 +30,7 @@ typedef enum {
     ND_STRUCTDEF, // define struct
     ND_STRUCTREF, // reference struct
     ND_STRUCTREF_PTR, // reference struct pointer
+    ND_ARRAYREF, // array reference
 } NodeKind;
 
 bool is_struct_ref(NodeKind kind);
