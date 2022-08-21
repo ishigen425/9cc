@@ -181,12 +181,20 @@ Node *declared_gvar(Token *tok, TokenKind ty) {
     gvar->next = globals;
     gvar->name = tok->str;
     gvar->len = tok->len;
-    if (consume("[")) {
+    
+    bool is_array = false;
+    int all_element_cnt = 1;
+    while (consume("[")) {
+        is_array = true;
         tmp = calloc(1, sizeof(Type));
         tmp->ptr_to = top;
         tmp->ty = ARRAY;
         tmp->array_size = expect_number();
+        all_element_cnt *= tmp->array_size;
         expect("]");
+        top = tmp;
+    }
+    if(is_array) {
         gvar->type = tmp;
     } else {
         gvar->type = top;
@@ -235,12 +243,19 @@ Node *declared_structs_gvar(Token *tok, TokenKind ty) {
         gvar->name = struct_tok->str;
         gvar->len = struct_tok->len;
     }
-    if (consume("[")) {
+    bool is_array = false;
+    int all_element_cnt = 1;
+    while (consume("[")) {
+        is_array = true;
         tmp = calloc(1, sizeof(Type));
         tmp->ptr_to = top;
         tmp->ty = ARRAY;
         tmp->array_size = expect_number();
+        all_element_cnt *= tmp->array_size;
         expect("]");
+        top = tmp;
+    }
+    if(is_array) {
         gvar->type = tmp;
     } else {
         gvar->type = top;
@@ -255,7 +270,15 @@ Node *declared_structs_gvar(Token *tok, TokenKind ty) {
     if (node->type->ty == INT) node->offset = 8;
     else if (node->type->ty == CHAR) node->offset = 1;
     if (node->type->ty == ARRAY) {
-        node->offset *= tmp->array_size;
+        int now_offset = 1;
+        Type *tmp_type = gvar->type;
+        while (tmp_type != NULL && tmp_type->ptr_to != NULL) {
+            if(tmp_type->ty == ARRAY) {
+                now_offset *= tmp_type->array_size;
+            }
+            tmp_type = tmp_type->ptr_to;
+        }
+        node->offset = now_offset * 8;
     } else if (node->type->ty == STRUCT) {
         Token *search_tok = calloc(1, sizeof(Token));
         search_tok->str = tokname;
@@ -665,7 +688,6 @@ Node *primary() {
             node->offset = lvar->offset;
             node->type = lvar->type;
             arg_type = lvar->type;
-            bool is_array = false;
             if (consume("[")) {
                 int dimension = 0;
                 Type *tmp_type = lvar->type;
@@ -735,10 +757,34 @@ Node *primary() {
             node->name = gvar->name;
             node->namelen = gvar->len;
             bool is_array = false;
-            while (consume("[")){
-                is_array = true;
-                node = new_binary(ND_DEREF, new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), new_binary(ND_MUL, new_node_num(8), equality())), NULL);
-                expect("]");
+            if (consume("[")) {
+                int dimension = 0;
+                Type *tmp_type = gvar->type;
+                while (tmp_type != NULL && tmp_type->ptr_to != NULL) {
+                    if(tmp_type->ty == ARRAY) dimension++;
+                    tmp_type = tmp_type->ptr_to;
+                }
+                tmp_type = gvar->type;
+                int ele_nums[dimension];
+                int now_offset = 1;
+                for (int i = 0; i < dimension; i++) {
+                    if(tmp_type->ty == ARRAY) {
+                        ele_nums[dimension - i - 1] = tmp_type->array_size;
+                        now_offset *= ele_nums[dimension - i - 1];
+                    }
+                    tmp_type = tmp_type->ptr_to;
+                }
+                Node *index_node = new_node_num(0);
+                for (int i = 0; i < dimension; i++) {
+                    now_offset /= ele_nums[i];
+                    index_node = new_binary(ND_ADD, index_node, new_binary(ND_MUL, equality(), new_node_num(now_offset)));
+                    expect("]");
+                    consume("[");
+                }
+                node = new_binary(ND_DEREF, 
+                    new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), 
+                    new_binary(ND_MUL, new_node_num(8), index_node)), NULL);
+                return node;
             }
             if (is_array) {
                 return node;

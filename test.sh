@@ -172,7 +172,7 @@ assert 6 'test_file/array/testag.c'
 assert 9 'test_file/array/testah.c'
 assert 3 'test_file/array/testai.c'
 assert 21 'test_file/array/testaj.c'
-assert 112 'test_file/array/testak.c'
+assert 225 'test_file/array/testak.c'
 
 assert 0 'test_file/global_variables/testaa.c'
 assert 1 'test_file/global_variables/testab.c'

@@ -125,6 +125,7 @@ struct GVar {
     char *name;
     int len;
     Type *type;     // 変数の型を保持する
+    int all_ele;
 };
 
 typedef struct EnumDef EnumDef;
