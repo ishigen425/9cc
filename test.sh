@@ -24,7 +24,7 @@ assert() {
     input="$2"
 
     ./9cc "$input" > tmp.s
-    cc -no-pie -o tmp tmp.s tmp2.o
+    cc -static -no-pie -o tmp tmp.s tmp2.o
     ./tmp
     actual="$?"
 
