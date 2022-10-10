@@ -100,6 +100,7 @@ typedef enum {
     TK_SIZEOF,   // sizeof
     TK_CHAR,     // char
     TK_STR,      // string
+    TK_LT_CHAR,      // literal char
     TK_STRUCT,   // struct
     TK_TYPEDEF,  // typedef
     TK_ENUM,     // enum

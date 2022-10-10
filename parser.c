@@ -851,6 +851,11 @@ Node *primary() {
         token = token->next;
         return new_binary(ND_ADDR, node, NULL);
     }
+    if (token->kind == TK_LT_CHAR) {
+        int ascii_code = (int)token->str[0];
+        token = token->next;
+        return new_node_num(ascii_code);
+    }
     if (token->kind == TK_STRUCT) {
         if(consume_kind(TK_STRUCT)){
             Token *struct_type_token = consume_indent();

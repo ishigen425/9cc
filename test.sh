@@ -195,6 +195,8 @@ assert 3 'test_file/char/testab.c'
 assert 3 'test_file/char/testac.c'
 assert 0 'test_file/char/testad.c'
 assert 0 'test_file/char/testae.c'
+assert 65 'test_file/char/testaf.c'
+assert 67 'test_file/char/testag.c'
 
 assert 1 'test_file/comment/test.c'
 

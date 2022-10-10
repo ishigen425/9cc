@@ -232,6 +232,17 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "'")){
+            p++;
+            cur = new_token(TK_LT_CHAR, cur, p, 1);
+            p++;
+            if (!startswith(p, "'")) {
+                error_at(p, user_input, "expected '\%c'");
+            }
+            p++;
+            continue;
+        }
+
         if (strchr("+-*/)(<>=;{},&[]%", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
