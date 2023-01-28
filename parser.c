@@ -494,6 +494,8 @@ Node *assign() {
     Node *node = equality();
     if (consume("="))
         node = new_binary(ND_ASSIGN, node, assign());
+    else if (consume("&&"))
+        node = new_binary(ND_AND, node, assign());
     return node;
 }
 
@@ -505,8 +507,6 @@ Node *equality() {
             node = new_binary(ND_EQ, node, relational());
         else if (consume("!="))
             node = new_binary(ND_NE, node, relational());
-        else if (consume("&&"))
-            node = new_binary(ND_AND, node, relational());
         else
             return node;
     }
