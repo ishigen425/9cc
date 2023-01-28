@@ -503,8 +503,10 @@ Node *equality() {
     for (;;) {
         if (consume("=="))
             node = new_binary(ND_EQ, node, relational());
-        if (consume("!="))
+        else if (consume("!="))
             node = new_binary(ND_NE, node, relational());
+        else if (consume("&&"))
+            node = new_binary(ND_AND, node, relational());
         else
             return node;
     }

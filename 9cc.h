@@ -9,6 +9,7 @@ typedef enum {
     ND_NE, // !=
     ND_LT, // <
     ND_LE, // <=
+    ND_AND, // &&
     ND_NUM,
     ND_ASSIGN,
     ND_LVAR,

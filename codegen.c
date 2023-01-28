@@ -264,6 +264,9 @@ void gen(Node *node) {
         printf("    sete al\n");
         printf("    movzb rax, al\n");
         break;
+    case ND_AND:
+        printf("    and rax, rdi\n");
+        break;
     case ND_NE:
         printf("    cmp rax, rdi\n");
         printf("    setne al\n");
