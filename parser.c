@@ -496,6 +496,8 @@ Node *assign() {
         node = new_binary(ND_ASSIGN, node, assign());
     else if (consume("&&"))
         node = new_binary(ND_AND, node, assign());
+    else if (consume("||"))
+        node = new_binary(ND_OR, node, assign());
     return node;
 }
 
