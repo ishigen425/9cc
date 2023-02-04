@@ -143,6 +143,7 @@ assert 3 'test_file/derefer_addr/testaa.c'
 assert 3 'test_file/derefer_addr/testab.c'
 assert 3 'test_file/derefer_addr/testac.c'
 assert 3 'test_file/derefer_addr/testad.c'
+assert 10 'test_file/derefer_addr/testae.c'
 
 # chibiccの実装でもint型の配列は8バイトずつの値として扱っていたので、一旦それに合わせるためにコメントアウトしておく。後から修正するはず。
 # assert 1 'test_file/ptr_add/testaa.c'

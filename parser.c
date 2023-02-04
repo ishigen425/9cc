@@ -350,12 +350,22 @@ Node *define_function_gvar() {
             return calloc(1, sizeof(Node));
         }
     }
+    Type *top = calloc(1, sizeof(Type));
+    top->ptr_to = calloc(1, sizeof(Type));
+    Type *tmp = top->ptr_to;
+    while (consume("*")) {
+        // ポインタ型を定義する
+        tmp->ty = PTR;
+        tmp->ptr_to = calloc(1, sizeof(Type));
+        tmp = tmp->ptr_to;
+    }
     Token *tok = consume_indent();
     if (consume("(")) {
         Node *func_node = calloc(1, sizeof(Node));
         func_node->kind = ND_FUNCDEF;
         func_node->name = tok->str;
         func_node->namelen = tok->len;
+        func_node->type = tmp;
         int argnum = 0;
         while(!consume(")")){
             if(argnum >= 6)
