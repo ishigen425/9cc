@@ -63,6 +63,21 @@ int is_alnum(char c) {
             (c == '_');
 }
 
+char *exclude_double_quote(char *p, int include_len, int *exclude_len) {
+    char *str = malloc(sizeof(char) * include_len);
+    int str_idx = 0;
+    for(int i = 0; i < include_len; i++) {
+        if(memcmp(p-include_len-1+i, "\\\"", 2) == 0){
+            continue;
+        }
+        memcpy(&(str[str_idx]), p-include_len-1+i, 1);
+        str_idx++;
+    }
+    *exclude_len = str_idx;
+    for(;str_idx < include_len; str_idx++) str[str_idx] = '\0';
+    return str;
+}
+
 Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
     Token *tok = calloc(1, sizeof(Token));
     tok->kind = kind;
@@ -236,11 +251,18 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
         if (startswith(p, "\"")){
             int len = 0;
             p++;
-            for(; !startswith(p, "\""); p++){
+            while(!startswith(p, "\"")){
+                if(startswith(p, "\\\"")) {
+                    p += 2;
+                    len += 2;
+                }
+                p++;
                 len++;
             }
             p++;
-            cur = new_token(TK_STR, cur, p-len-1, len);
+            int exclude_len;
+            char *str = exclude_double_quote(p, len, &exclude_len);
+            cur = new_token(TK_STR, cur, str, exclude_len);
             continue;
         }
 
