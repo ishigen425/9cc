@@ -145,6 +145,14 @@ void gen(Node *node) {
         printf("    push rax\n");
         return;
     case ND_FUNCALL:
+        // When calling functions, the remainder of rsp divided by 16 must be 0.
+        printf("    mov rax, rsp\n");
+        printf("    mov rdi, 16\n");
+        printf("    cqo\n");
+        printf("    idiv rdi\n");
+        printf("    sub rsp, rdx\n");
+        printf("    push rdx\n");
+        printf("    push rdx\n");
         mysubstr(t, node->name, 0, node->namelen);
         int idx = 0;
         // RDI, RSI, RDX, RCX, R8, R9 を順番に使う
@@ -156,6 +164,9 @@ void gen(Node *node) {
 
         printf("    mov rax, 0\n");
         printf("    call %s\n", t);
+        printf("    pop rdx\n");
+        printf("    pop rdx\n");
+        printf("    add rsp, rdx\n");
         // main関数内で毎回pop raxしてるため、同じ値をスタックに積んでおく
         printf("    push rax\n");
         return;
