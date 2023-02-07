@@ -29,7 +29,7 @@ void gen_variable(Node *node) {
         printf("    add rax, %d\n", node->offset);
         printf("    push rax\n");
     } else {
-        error("代入の左辺値が変数ではありません");
+        error("The left-hand value of the assignment is not a variable.");
     }
 }
 
@@ -122,7 +122,6 @@ void gen(Node *node) {
         if (node->testexpr != NULL) {
             gen(node->testexpr);
         } else {
-            // 条件式が未定義の場合は常にfor文の中の処理を実行させる？
             printf("    push 1\n");
         }
         printf("    pop rax\n");
@@ -155,7 +154,7 @@ void gen(Node *node) {
         printf("    push rdx\n");
         mysubstr(t, node->name, 0, node->namelen);
         int idx = 0;
-        // RDI, RSI, RDX, RCX, R8, R9 を順番に使う
+        // Use in order -> RDI, RSI, RDX, RCX, R8, R9
         while(node->arg[idx] != NULL){
             gen(node->arg[idx]);
             printf("    pop %s\n", arglist[idx]);
@@ -167,17 +166,16 @@ void gen(Node *node) {
         printf("    pop rdx\n");
         printf("    pop rdx\n");
         printf("    add rsp, rdx\n");
-        // main関数内で毎回pop raxしてるため、同じ値をスタックに積んでおく
+        // return value push stack
         printf("    push rax\n");
         return;
     case ND_FUNCDEF:
         mysubstr(t, node->name, 0, node->namelen);
         printf(".text\n");
         printf("%s:\n", t);
-        //　プロローグ
+        // prolog
         printf("    push rbp\n");
         printf("    mov rbp, rsp\n");
-        // 変数の領域確保
         int variable_space = (node->argnum) * 8  + node->offset;
         if (variable_space % 16 != 0) variable_space += 8;
         printf("    sub rsp, %d\n", variable_space);
@@ -190,7 +188,7 @@ void gen(Node *node) {
 
         gen(node->lhs);
 
-        // エピローグ
+        // epilog
         printf("    mov rsp, rbp\n");
         printf("    pop rbp\n");
         printf("    ret\n");
