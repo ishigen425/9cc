@@ -50,7 +50,7 @@ void expect(char *op) {
 
 int expect_number() {
     if (token->kind != TK_NUM)
-        error_at(token->str, user_input, "数ではありません");
+        error_at(token->str, user_input, "Not Number", "");
     int val = token->val;
     token = token->next;
     return val;
@@ -242,7 +242,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
                 p++;
             }
             if (*p == '\0') {
-                error_at(p, user_input,"コメントが閉じられていません。");
+                error_at(p, user_input,"Comment not closed", "");
             }
             p += 2;
             continue;
@@ -271,7 +271,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             cur = new_token(TK_LT_CHAR, cur, p, 1);
             p++;
             if (!startswith(p, "'")) {
-                error_at(p, user_input, "expected '\%c'");
+                error_at(p, user_input, "expected '\%c'", "");
             }
             p++;
             continue;
@@ -298,7 +298,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
-        error_at(p, user_input, "トークナイズできません");
+        error_at(p, user_input, "Can not tokenized", "");
     }
 
     new_token(TK_EOF, cur, p, 0);

@@ -15,7 +15,7 @@ void error(char *fmt, ... ) {
     exit(1);
 }
 
-void error_at(char *loc, char *user_input, char *msg, ...){
+void error_at(char *loc, char *user_input, char *msg, char *op) {
     char *line = loc;
     while(user_input < line && line[-1] != '\n'){
         line--;
@@ -35,7 +35,9 @@ void error_at(char *loc, char *user_input, char *msg, ...){
 
     int pos = loc - line + indent;
     fprintf(stderr, "%*s", pos, "");
-    fprintf(stderr, "^ %s", msg);
+    fprintf(stderr, "^ ");
+    fprintf(stderr, msg, op);
+    fprintf(stderr, "\n");
     exit(1);
 }
 

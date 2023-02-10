@@ -85,7 +85,7 @@ LVar *declared_lvar_undefiend_type(){
         lvar->type->type_name = child_tok->str;
         lvar->type->type_name_len = child_tok->len;
     } else {
-        error_at(token->str, user_input, "Not implementaion type!");
+        error_at(token->str, user_input, "%s Not implementaion type.", token->str);
     }
     return lvar;
 }
@@ -837,9 +837,9 @@ Node *primary() {
         } else if(enums_index >= 0) {
             return new_node_num(enums_index);
         } else {
-            char t[64];
+            char *t = calloc(64, sizeof(char));
             mysubstr(t, tok->str, 0, tok->len);
-            error("%s is not defined.", t);
+            error_at(tok->str, user_input, "%s is not defined.", t);
         }
         return NULL;
     }
