@@ -84,6 +84,8 @@ LVar *declared_lvar_undefiend_type(){
         lvar = declared_lvar(STRUCT, childe_struct_node->offset);
         lvar->type->type_name = child_tok->str;
         lvar->type->type_name_len = child_tok->len;
+    } else if (consume_indent()) {
+        lvar = declared_lvar(INT, 8);
     } else {
         error_at(token->str, user_input, "%s Not implementaion type.", token->str);
     }
@@ -639,11 +641,12 @@ Node *struct_ref(Node *defined_struct_node, Token *left_token) {
         Token *next_struct_tok = calloc(1, sizeof(Token));
         int offset = 0;
         for (Node *struct_node_var = defined_struct_node->lhs; struct_node_var; struct_node_var = struct_node_var->child) {
-            if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len))
+            if (struct_node_var->namelen == tok->len && !memcmp(struct_node_var->name, tok->str, tok->len)) {
                 offset += struct_node_var->offset;
                 next_struct_tok->str = struct_node_var->type->type_name;
                 next_struct_tok->len = struct_node_var->type->type_name_len;
                 break;
+            }
         }
         Node *struct_ref_node = calloc(1, sizeof(Node));
         struct_ref_node->offset = offset;
