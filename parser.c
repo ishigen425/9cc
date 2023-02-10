@@ -65,6 +65,31 @@ LVar *declared_lvar(TypeKind kind, int kind_size){
     return lvar;
 }
 
+LVar *declared_lvar_undefiend_type(){
+    LVar *lvar = calloc(1, sizeof(LVar));
+    if (consume_kind(TK_INT)) {
+        lvar = declared_lvar(INT, 8);
+    } else if (consume_kind(TK_CHAR)) {
+        lvar = declared_lvar(CHAR, 1);
+    } else if (consume_kind(TK_BOOL)) {
+        lvar = declared_lvar(BOOL, 1);
+    } else if (consume_kind(TK_STRUCT)) {
+        Token *child_tok = consume_indent();
+        Node *childe_struct_node = find_defined_structs(child_tok);
+        if(childe_struct_node == NULL) {
+            char *t = calloc(50, sizeof(char));
+            mysubstr(t, child_tok->str, 0, child_tok->len);
+            error("%s is not defined.", t);
+        }
+        lvar = declared_lvar(STRUCT, childe_struct_node->offset);
+        lvar->type->type_name = child_tok->str;
+        lvar->type->type_name_len = child_tok->len;
+    } else {
+        error_at(token->str, user_input, "Not implementaion type!");
+    }
+    return lvar;
+}
+
 LVar *declare_structs() {
     Token *struct_name_tok = consume_indent();
     Node *struct_node = find_defined_structs(struct_name_tok);
@@ -100,27 +125,7 @@ Node *defined_struct(Token *tok) {
     Node *variabls = NULL;
     expect("{");
     while (!consume("}")) {
-        LVar *lvar = calloc(1, sizeof(LVar));
-        if (consume_kind(TK_INT)) {
-            lvar = declared_lvar(INT, 8);
-        } else if (consume_kind(TK_CHAR)) {
-            lvar = declared_lvar(CHAR, 1);
-        } else if (consume_kind(TK_BOOL)) {
-            lvar = declared_lvar(BOOL, 1);
-        } else if (consume_kind(TK_STRUCT)) {
-            Token *child_tok = consume_indent();
-            Node *childe_struct_node = find_defined_structs(child_tok);
-            if(childe_struct_node == NULL) {
-                char *t = calloc(50, sizeof(char));
-                mysubstr(t, child_tok->str, 0, child_tok->len);
-                error("%s is not defined.", t);
-            }
-            lvar = declared_lvar(STRUCT, childe_struct_node->offset);
-            lvar->type->type_name = child_tok->str;
-            lvar->type->type_name_len = child_tok->len;
-        } else {
-            lvar = calloc(1, sizeof(LVar));
-        }
+        LVar *lvar = declared_lvar_undefiend_type();
         Node *lvar_node = calloc(1, sizeof(Node));
         lvar_node->kind = ND_LVAR;
         lvar_node->offset = offset;
@@ -131,7 +136,6 @@ Node *defined_struct(Token *tok) {
         variabls = lvar_node;
         offset += lvar->offset;
         expect(";");
-
     }
     expect(";");
     Node *defined_struct_node = calloc(1, sizeof(Node));
@@ -371,14 +375,7 @@ Node *define_function_gvar() {
             if(argnum >= 6)
                 error("not implementation error!");
             // 引数をローカル変数と同様に扱う
-            LVar *lvar;
-            if (consume_kind(TK_INT)) {
-                lvar = declared_lvar(INT, 8);
-            } else if (consume_kind(TK_CHAR)) {
-                lvar = declared_lvar(CHAR, 1);
-            } else if (consume_kind(TK_BOOL)) {
-                lvar = declared_lvar(BOOL, 1);
-            }
+            LVar *lvar = declared_lvar_undefiend_type();
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
