@@ -211,6 +211,7 @@ assert 42 'test_file/struct/testg.c'
 assert 12 'test_file/struct/testh.c'
 assert 12 'test_file/struct/testi.c'
 assert 26 'test_file/struct/testj.c'
+assert 10 'test_file/struct/testk.c'
 
 assert 20 'test_file/enum/testa.c'
 

@@ -65,7 +65,7 @@ LVar *declared_lvar(TypeKind kind, int kind_size){
     return lvar;
 }
 
-LVar *declared_lvar_undefiend_type(){
+LVar *declared_lvar_undefiend_type(Token *parent_tok){
     LVar *lvar = calloc(1, sizeof(LVar));
     if (consume_kind(TK_INT)) {
         lvar = declared_lvar(INT, 8);
@@ -76,14 +76,26 @@ LVar *declared_lvar_undefiend_type(){
     } else if (consume_kind(TK_STRUCT)) {
         Token *child_tok = consume_indent();
         Node *childe_struct_node = find_defined_structs(child_tok);
-        if(childe_struct_node == NULL) {
-            char *t = calloc(50, sizeof(char));
-            mysubstr(t, child_tok->str, 0, child_tok->len);
-            error("%s is not defined.", t);
+        if (parent_tok != NULL && child_tok->len == parent_tok->len && !memcmp(child_tok->str, parent_tok->str, child_tok->len)) {
+            // allow self pointer exceptionally
+            lvar = declared_lvar(STRUCT, 8);
+            if(lvar->type->ty != PTR) {
+                char *t = calloc(50, sizeof(char));
+                mysubstr(t, lvar->name, 0, lvar->len);
+                error_at(lvar->name, user_input, "%s is not a self pointer.", t);
+            }
+            lvar->type->type_name = child_tok->str;
+            lvar->type->type_name_len = child_tok->len;
+        } else {
+            if(childe_struct_node == NULL) {
+                char *t = calloc(50, sizeof(char));
+                mysubstr(t, child_tok->str, 0, child_tok->len);
+                error("%s is not defined.", t);
+            }
+            lvar = declared_lvar(STRUCT, childe_struct_node->offset);
+            lvar->type->type_name = child_tok->str;
+            lvar->type->type_name_len = child_tok->len;
         }
-        lvar = declared_lvar(STRUCT, childe_struct_node->offset);
-        lvar->type->type_name = child_tok->str;
-        lvar->type->type_name_len = child_tok->len;
     } else if (consume_indent()) {
         lvar = declared_lvar(INT, 8);
     } else {
@@ -127,7 +139,7 @@ Node *defined_struct(Token *tok) {
     Node *variabls = NULL;
     expect("{");
     while (!consume("}")) {
-        LVar *lvar = declared_lvar_undefiend_type();
+        LVar *lvar = declared_lvar_undefiend_type(tok);
         Node *lvar_node = calloc(1, sizeof(Node));
         lvar_node->kind = ND_LVAR;
         lvar_node->offset = offset;
@@ -377,7 +389,7 @@ Node *define_function_gvar() {
             if(argnum >= 6)
                 error("not implementation error!");
             // 引数をローカル変数と同様に扱う
-            LVar *lvar = declared_lvar_undefiend_type();
+            LVar *lvar = declared_lvar_undefiend_type(NULL);
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
