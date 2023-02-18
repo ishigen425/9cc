@@ -161,6 +161,7 @@ bool startswith(char *p, char *q);
 
 void gen(Node *node);
 void program();
+void preprocess();
 
 Node *code[100];
 Token *token;

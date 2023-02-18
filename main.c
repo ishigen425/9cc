@@ -52,6 +52,7 @@ int main(int argc, char **argv) {
 
     // トークナイズしてパースする
     tokenize(read_file(argv[1]));
+    preprocess();
     program();
     
     printf(".intel_syntax noprefix\n");
