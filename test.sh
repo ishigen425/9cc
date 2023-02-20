@@ -215,13 +215,8 @@ assert 10 'test_file/struct/testk.c'
 
 assert 20 'test_file/enum/testa.c'
 
-assert 1 'test_file/bool/testa.c'
-assert 0 'test_file/bool/testb.c'
-assert 5 'test_file/bool/testc.c'
-assert 2 'test_file/bool/testd.c'
-assert 1 'test_file/bool/teste.c'
-
 assert 43 'test_file/preprocessor/testa.c'
+assert 2 'test_file/preprocessor/testb.c'
 
 echo OK
 

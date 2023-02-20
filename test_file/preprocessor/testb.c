@@ -1,4 +1,7 @@
-bool is_mod2(int val) {
+#define true 1
+#define false 0
+
+int is_mod2(int val) {
     if (val % 2 == 0) {
         return true;
     }
