@@ -56,11 +56,12 @@ char *memcpy_char(char *src, int len) {
     return dest;
 }
 
-void deep_copy(Token *src_toke, Token *dest_token) {
-    dest_token->kind = src_toke->kind;
-    dest_token->str = memcpy_char(src_toke->str, src_toke->len);
-    dest_token->len = src_toke->len;
-    dest_token->next = NULL;
+void deep_copy(Token *src_token, Token *dest_token) {
+    dest_token->kind = src_token->kind;
+    dest_token->str = memcpy_char(src_token->str, src_token->len);
+    dest_token->len = src_token->len;
+    dest_token->next = src_token->next;
+    dest_token->val = src_token->val;
     return;
 }
 

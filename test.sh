@@ -221,5 +221,7 @@ assert 5 'test_file/bool/testc.c'
 assert 2 'test_file/bool/testd.c'
 assert 1 'test_file/bool/teste.c'
 
+assert 43 'test_file/preprocessor/testa.c'
+
 echo OK
 
