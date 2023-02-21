@@ -112,6 +112,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
             continue;
         }
 
+        if (startswith(p, "#define ")) {
+            cur = new_token(TK_DEFINE, cur, p, 8);
+            p += 8;
+            continue;
+        }
+
         if (startswith(p, "typedef ")) {
             cur = new_token(TK_TYPEDEF, cur, p, 7);
             p += 7;
