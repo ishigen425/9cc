@@ -313,7 +313,7 @@ void tokenize(char *p) {
     head.next = NULL;
     user_input = p;
     
-    tokenize_until_end_char(p, "\0");
+    p = tokenize_until_end_char(p, "\0");
 
     new_token(TK_EOF, cur, p, 0);
     token = head.next;
