@@ -94,19 +94,16 @@ void preprocess() {
             continue;
         }
 
-        char *key = memcpy_char(cur->next->str, cur->next->len);
+        char *key = memcpy_char(cur->str, cur->len);
         Token *value = hashmap_get(key);
         if (value != NULL) {
-            deep_copy(cur, new_token);
-            new_token->next = calloc(1, sizeof(Token));
-            new_token = new_token->next;
             while (value->kind != TK_DEFINE_END) {
                 deep_copy(value, new_token);
                 new_token->next = calloc(1, sizeof(Token));
                 new_token = new_token->next;
                 value = value->next;
             }
-            cur = cur->next->next;
+            cur = cur->next;
             continue;
         }
         deep_copy(cur, new_token);
