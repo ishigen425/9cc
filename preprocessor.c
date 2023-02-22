@@ -76,17 +76,38 @@ void preprocess() {
             Token *left_tok = cur;
             char *key = memcpy_char(left_tok->str, left_tok->len);
             cur = cur->next;
-            Token *right_tok = cur;
+            Token *right_tok_head = calloc(1, sizeof(Token));
+            Token *right_tok = calloc(1, sizeof(Token));
+            right_tok_head->next = right_tok;
+            deep_copy(cur, right_tok);
+            right_tok->next = calloc(1, sizeof(Token));
+            right_tok = right_tok->next;
+            while(cur->kind != TK_DEFINE_END) {
+                cur = cur->next;
+                deep_copy(cur, right_tok);
+                right_tok->next = calloc(1, sizeof(Token));
+                right_tok = right_tok->next;
+            }
+            right_tok->kind = TK_DEFINE_END;
+            hashmap_put(key, right_tok_head->next);
             cur = cur->next;
-            hashmap_put(key, right_tok);
             continue;
         }
 
         char *key = memcpy_char(cur->next->str, cur->next->len);
         Token *value = hashmap_get(key);
         if (value != NULL) {
-            value->next = cur->next->next;
-            cur->next = value;
+            deep_copy(cur, new_token);
+            new_token->next = calloc(1, sizeof(Token));
+            new_token = new_token->next;
+            while (value->kind != TK_DEFINE_END) {
+                deep_copy(value, new_token);
+                new_token->next = calloc(1, sizeof(Token));
+                new_token = new_token->next;
+                value = value->next;
+            }
+            cur = cur->next->next;
+            continue;
         }
         deep_copy(cur, new_token);
         new_token->next = calloc(1, sizeof(Token));

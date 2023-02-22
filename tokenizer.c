@@ -87,13 +87,11 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
     return tok;
  }
 
- void tokenize(char *p) {
-    Token head;
-    head.next = NULL;
-    Token *cur = &head;
-    user_input = p;
+Token head;
+Token *cur = &head;
 
-    while (*p) {
+char *tokenize_until_end_char(char *p, char *end_char) {
+    while (memcmp(p, end_char, 1) != 0) {
         if(isspace(*p)) {
             p++;
             continue;
@@ -115,6 +113,8 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
         if (startswith(p, "#define ")) {
             cur = new_token(TK_DEFINE, cur, p, 8);
             p += 8;
+            p = tokenize_until_end_char(p, "\n");
+            cur = new_token(TK_DEFINE_END, cur, "", 0);
             continue;
         }
 
@@ -306,8 +306,17 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
 
         error_at(p, user_input, "Can not tokenized", "");
     }
+    return p;
+}
+
+void tokenize(char *p) {
+    head.next = NULL;
+    user_input = p;
+    
+    tokenize_until_end_char(p, "\0");
 
     new_token(TK_EOF, cur, p, 0);
     token = head.next;
     return;
 }
+

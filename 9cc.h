@@ -110,6 +110,7 @@ typedef enum {
     TK_FALSE,    // false
     TK_BOOL,     // bool
     TK_DEFINE,  // #dfined
+    TK_DEFINE_END,  // #dfined end
 } TokenKind;
 
 typedef struct Token Token;
