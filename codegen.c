@@ -157,9 +157,11 @@ void gen(Node *node) {
         // Use in order -> RDI, RSI, RDX, RCX, R8, R9
         while(node->arg[idx] != NULL){
             gen(node->arg[idx]);
-            printf("    pop %s\n", arglist[idx]);
             idx++;
         }
+        for(int i = idx - 1; i >= 0; i--){
+            printf("    pop %s\n", arglist[i]);
+        };
 
         printf("    mov rax, 0\n");
         printf("    call %s\n", t);
