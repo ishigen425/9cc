@@ -154,6 +154,7 @@ assert 10 'test_file/derefer_addr/testae.c'
 # assert 11 'test_file/ptr_add/testaf.c'
 # assert 23 'test_file/ptr_add/testag.c'
 # assert 34 'test_file/ptr_add/testah.c'
+assert 101 'test_file/ptr_add/testai.c'
 
 assert 4 'test_file/sizeof/testaa.c'
 assert 4 'test_file/sizeof/testab.c'

@@ -24,6 +24,26 @@ bool at_eof() {
     return token->kind == TK_EOF;
 }
 
+int get_size(Type *type) {
+    if (type->ty == INT) return 8;
+    if (type->ty == CHAR) return 1;
+    if (type->ty == PTR) return 8;
+    if (type->ty == ARRAY) return 8;
+    if (type->ty == STRUCT) return 8;
+    return 8;
+}
+
+int get_dimension(LVar *lvar) {
+    int dimension = 0;
+    Type *tmp_type = lvar->type;
+    if (tmp_type->ty == PTR) return 1;
+    while (tmp_type != NULL && tmp_type->ptr_to != NULL) {
+        if(tmp_type->ty == ARRAY) dimension++;
+        tmp_type = tmp_type->ptr_to;
+    }
+    return dimension;
+}
+
 LVar *declared_lvar(TypeKind kind, int kind_size){
     Type *top = calloc(1, sizeof(Type));
     top->ptr_to = calloc(1, sizeof(Type));
@@ -609,7 +629,7 @@ Node *mul_ptr(Type *type) {
         else if (consume("/"))
             node = new_binary(ND_DIV, node, unary());
         else
-            return new_binary(ND_MUL, node, new_node_num(8));
+            return new_binary(ND_MUL, node, new_node_num(get_size(type->ptr_to)));
     }
 }
 
@@ -715,13 +735,8 @@ Node *primary() {
             node->type = lvar->type;
             arg_type = lvar->type;
             if (consume("[")) {
-                int dimension = 0;
+                int dimension = get_dimension(lvar);
                 Type *tmp_type = lvar->type;
-                while (tmp_type != NULL && tmp_type->ptr_to != NULL) {
-                    if(tmp_type->ty == ARRAY) dimension++;
-                    tmp_type = tmp_type->ptr_to;
-                }
-                tmp_type = lvar->type;
                 int ele_nums[dimension];
                 int now_offset = 1;
                 for (int i = 0; i < dimension; i++) {
