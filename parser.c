@@ -644,6 +644,8 @@ Node *unary(){
         return new_binary(ND_ADDR, unary(), NULL);
     if (consume("*"))
         return new_binary(ND_DEREF, unary(), NULL);
+    if (consume("!"))
+        return new_binary(ND_NOT, unary(), NULL);
     if (consume_kind(TK_SIZEOF)){
         arg_type = NULL;
         Node *node = primary();

@@ -162,6 +162,12 @@ char *tokenize_until_end_char(char *p, char *end_char) {
             continue;
         }
 
+        if(startswith(p, "!")) {
+            cur = new_token(TK_RESERVED, cur, p, 1);
+            p++;
+            continue;
+        }
+
         if (startswith(p, ".")){
             cur = new_token(TK_RESERVED, cur, p, 1);
             p++;

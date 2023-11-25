@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdlib.h>
 #include "9cc.h"
 
 #define HASHMAP_SIZE 1009

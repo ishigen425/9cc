@@ -33,6 +33,7 @@ typedef enum {
     ND_STRUCTREF, // reference struct
     ND_STRUCTREF_PTR, // reference struct pointer
     ND_ARRAYREF, // array reference
+    ND_NOT,
 } NodeKind;
 
 bool is_struct_ref(NodeKind kind);
@@ -111,6 +112,7 @@ typedef enum {
     TK_BOOL,     // bool
     TK_DEFINE,  // #dfined
     TK_DEFINE_END,  // #dfined end
+    TK_EXCLAMT, // !
 } TokenKind;
 
 typedef struct Token Token;

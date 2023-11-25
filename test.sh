@@ -88,6 +88,7 @@ assert 11 'test_file/while_statement/testab.c'
 assert 18 'test_file/while_statement/testac.c'
 assert 1 'test_file/while_statement/testad.c'
 assert 1 'test_file/while_statement/testae.c'
+assert 10 'test_file/while_statement/testaf.c'
 
 assert 2 'test_file/if_statement/testaa.c'
 assert 2 'test_file/if_statement/testab.c'

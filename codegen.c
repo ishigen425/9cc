@@ -242,6 +242,12 @@ void gen(Node *node) {
         gen_variable(node);
         gen(node->lhs);
         return;
+    case ND_NOT:
+        gen(node->lhs);
+        printf("    pop rax\n");
+        printf("    xor rax, 1\n");
+        printf("    push rax\n");
+        return;
     }
 
     gen(node->lhs);
