@@ -99,12 +99,14 @@ char *tokenize_until_end_char(char *p, char *end_char) {
 
         // ignore include
         if (startswith(p, "#include \"")) {
+            p += 10;
             while (!startswith(p, "\"")) p++;
             p++;
             continue;
         }
 
         if (startswith(p, "#include <")) {
+            p += 10;
             while (!startswith(p, ">")) p++;
             p++;
             continue;
