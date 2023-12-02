@@ -154,7 +154,7 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
-Node *define_function_gvar();
+Node *define_function_or_gvar();
 Node *mul_ptr();
 
 void error(char *fmt, ... );

@@ -359,12 +359,12 @@ Node *new_node_indent(int offset) {
 void program() {
     int i = 0;
     while(!at_eof()) {
-        code[i++] = define_function_gvar();
+        code[i++] = define_function_or_gvar();
     }
     code[i] = NULL;
 }
 
-Node *define_function_gvar() {
+Node *define_function_or_gvar() {
     locals = NULL;
     _offset = 0;
     char t[64];
