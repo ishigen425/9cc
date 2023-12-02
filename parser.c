@@ -215,7 +215,7 @@ Node *declared_gvar(Token *tok, TokenKind ty) {
     tmp->ty = ty;
     tmp->ptr_to = NULL;
     top = top->ptr_to;
-    GVar *gvar = calloc(1, sizeof(LVar));
+    GVar *gvar = calloc(1, sizeof(GVar));
     gvar->next = globals;
     gvar->name = tok->str;
     gvar->len = tok->len;
@@ -376,11 +376,7 @@ Node *define_function_or_gvar() {
     if (consume_kind(TK_BOOL))
         ty = BOOL;
     if (consume_kind(TK_STRUCT)) {
-        Token *tok = consume_indent();
-        if (find_defined_structs(tok) != NULL) {
-            return declared_structs_gvar(tok, STRUCT);
-        }
-        return defined_struct(tok);
+        ty = STRUCT;
     }
     if (consume_kind(TK_TYPEDEF)) {
         if (consume_kind(TK_ENUM)) {
@@ -425,6 +421,11 @@ Node *define_function_or_gvar() {
         func_node->lhs = stmt();
         func_node->offset = get_next_offset(8);
         return func_node;
+    } else if (ty == STRUCT) {
+        if (find_defined_structs(tok) != NULL) {
+            return declared_structs_gvar(tok, STRUCT);
+        }
+        return defined_struct(tok);
     } else {
         return declared_gvar(tok, ty);
     }
@@ -877,7 +878,7 @@ Node *primary() {
     }
     if (token->kind == TK_STR) {
         Node *node = calloc(1, sizeof(Node));
-        GVar *gvar = calloc(1, sizeof(LVar));
+        GVar *gvar = calloc(1, sizeof(GVar));
         gvar->next = globals;
         gvar->name = token->str;
         gvar->len = token->len;
