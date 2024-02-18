@@ -44,36 +44,48 @@ int get_dimension(LVar *lvar) {
     return dimension;
 }
 
+
+// Function to allocate memory for a new Type object
+Type *new_type() {
+    return calloc(1, sizeof(Type));
+}
+
 LVar *declared_lvar(TypeKind kind, int kind_size){
-    Type *top = calloc(1, sizeof(Type));
-    top->ptr_to = calloc(1, sizeof(Type));
-    Type *tmp = top->ptr_to;
+    Type *top = new_type();
+    top->ptr_to = new_type();
+    Type *current_type = top->ptr_to;
+
+    // Define pointer type
     while (consume("*")) {
-        // ポインタ型を定義する
-        tmp->ty = PTR;
-        tmp->ptr_to = calloc(1, sizeof(Type));
-        tmp = tmp->ptr_to;
+        current_type->ty = PTR;
+        current_type->ptr_to = new_type();
+        current_type = current_type->ptr_to;
     }
-    tmp->ty = kind;
-    tmp->ptr_to = NULL;
+    current_type->ty = kind;
+    current_type->ptr_to = NULL;
     top = top->ptr_to;
     
     Token *tok = consume_indent();
     LVar *lvar = calloc(1, sizeof(LVar));
     lvar->name = tok->str;
     lvar->len = tok->len;
+
     bool is_array = false;
     int all_element_cnt = 1;
+
+    // Define array type
     while (consume("[")) {
         is_array = true;
-        tmp = calloc(1, sizeof(Type));
-        tmp->ptr_to = top;
-        tmp->ty = ARRAY;
-        tmp->array_size = expect_number();
-        all_element_cnt *= tmp->array_size;
+        current_type = new_type();
+        current_type->ptr_to = top;
+        current_type->ty = ARRAY;
+        current_type->array_size = expect_number();
+        all_element_cnt *= current_type->array_size;
         expect("]");
-        top = tmp;
+        top = current_type;
     }
+
+    // Calculate offset
     if(is_array) {
         lvar->type = top;
         lvar->offset += (all_element_cnt-1) * kind_size;
@@ -82,11 +94,24 @@ LVar *declared_lvar(TypeKind kind, int kind_size){
         lvar->type = top;
         lvar->offset = get_next_offset(kind_size);
     }
+
     return lvar;
 }
 
+void error_not_defined(char *str, int len) {
+    char *t = calloc(50, sizeof(char));
+    mysubstr(t, str, 0, len);
+    error("%s is not defined.", t);
+}
+
+void error_not_self_pointer(LVar *lvar) {
+    char *t = calloc(50, sizeof(char));
+    mysubstr(t, lvar->name, 0, lvar->len);
+    error_at(lvar->name, user_input, "%s is not a self pointer.", t);
+}
+
 LVar *declared_lvar_undefiend_type(Token *parent_tok){
-    LVar *lvar = calloc(1, sizeof(LVar));
+    LVar *lvar;
     if (consume_kind(TK_INT)) {
         lvar = declared_lvar(INT, 8);
     } else if (consume_kind(TK_CHAR)) {
@@ -100,17 +125,13 @@ LVar *declared_lvar_undefiend_type(Token *parent_tok){
             // allow self pointer exceptionally
             lvar = declared_lvar(STRUCT, 8);
             if(lvar->type->ty != PTR) {
-                char *t = calloc(50, sizeof(char));
-                mysubstr(t, lvar->name, 0, lvar->len);
-                error_at(lvar->name, user_input, "%s is not a self pointer.", t);
+                error_not_self_pointer(lvar);
             }
             lvar->type->type_name = child_tok->str;
             lvar->type->type_name_len = child_tok->len;
         } else {
             if(childe_struct_node == NULL) {
-                char *t = calloc(50, sizeof(char));
-                mysubstr(t, child_tok->str, 0, child_tok->len);
-                error("%s is not defined.", t);
+                error_not_defined(child_tok->str, child_tok->len);
             }
             lvar = declared_lvar(STRUCT, childe_struct_node->offset);
             lvar->type->type_name = child_tok->str;
