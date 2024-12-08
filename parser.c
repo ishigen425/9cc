@@ -650,6 +650,8 @@ Node *mul_ptr(Type *type) {
             node = new_binary(ND_MUL, node, unary());
         else if (consume("/"))
             node = new_binary(ND_DIV, node, unary());
+        else if (type->ptr_to->ty == CHAR)
+            return new_binary(ND_MUL, node, new_node_num(1));
         else
             return new_binary(ND_MUL, node, new_node_num(get_size(type->ptr_to)));
     }
