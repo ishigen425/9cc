@@ -34,6 +34,7 @@ typedef enum {
     ND_STRUCTREF_PTR, // reference struct pointer
     ND_ARRAYREF, // array reference
     ND_NOT,
+    ND_CAST, // type cast
 } NodeKind;
 
 bool is_struct_ref(NodeKind kind);
@@ -47,6 +48,7 @@ typedef enum {
     CHAR,
     BOOL,
     STRUCT,
+    VOID,
 } TypeKind;
 
 struct Type {
@@ -110,6 +112,7 @@ typedef enum {
     TK_TRUE,     // true
     TK_FALSE,    // false
     TK_BOOL,     // bool
+    TK_VOID,     // void
     TK_DEFINE,  // #defined
     TK_DEFINE_END,  // #defined end
     TK_EXCLAMT, // !
