@@ -34,6 +34,17 @@ int get_size(Type *type) {
     return 8;
 }
 
+int get_element_size(Type *type) {
+    if (type == NULL) return 8;
+    if (type->ty == PTR && type->ptr_to != NULL) {
+        return get_size(type->ptr_to);
+    }
+    if (type->ty == ARRAY && type->ptr_to != NULL) {
+        return get_size(type->ptr_to);
+    }
+    return get_size(type);
+}
+
 int get_dimension(LVar *lvar) {
     int dimension = 0;
     Type *tmp_type = lvar->type;
@@ -803,28 +814,40 @@ Node *primary() {
             node->type = lvar->type;
             arg_type = lvar->type;
             if (consume("[")) {
-                int dimension = get_dimension(lvar);
-                Type *tmp_type = lvar->type;
-                int ele_nums[dimension];
-                int now_offset = 1;
-                for (int i = 0; i < dimension; i++) {
-                    if(tmp_type->ty == ARRAY) {
-                        ele_nums[dimension - i - 1] = tmp_type->array_size;
-                        now_offset *= ele_nums[dimension - i - 1];
-                    }
-                    tmp_type = tmp_type->ptr_to;
-                }
-                Node *index_node = new_node_num(0);
-                for (int i = 0; i < dimension; i++) {
-                    now_offset /= ele_nums[i];
-                    index_node = new_binary(ND_ADD, index_node, new_binary(ND_MUL, equality(), new_node_num(now_offset)));
+                if (lvar->type->ty == PTR) {
+                    // Simple pointer indexing: *(ptr + index * element_size)
+                    Node *index = equality();
                     expect("]");
-                    consume("[");
+                    node = new_binary(ND_DEREF, 
+                        new_binary(ND_ADD, node, 
+                        new_binary(ND_MUL, index, new_node_num(get_element_size(lvar->type)))), NULL);
+                    return node;
+                } else {
+                    // Complex multi-dimensional array logic
+                    int dimension = get_dimension(lvar);
+                    Type *tmp_type = lvar->type;
+                    int ele_nums[dimension];
+                    int now_offset = 1;
+                    for (int i = 0; i < dimension; i++) {
+                        if(tmp_type->ty == ARRAY) {
+                            ele_nums[dimension - i - 1] = tmp_type->array_size;
+                            now_offset *= ele_nums[dimension - i - 1];
+                        }
+                        tmp_type = tmp_type->ptr_to;
+                    }
+                    Node *index_node = new_node_num(0);
+                    for (int i = 0; i < dimension; i++) {
+                        now_offset /= ele_nums[i];
+                        index_node = new_binary(ND_ADD, index_node, new_binary(ND_MUL, equality(), new_node_num(now_offset)));
+                        expect("]");
+                        consume("[");
+                    }
+                    // For array types: *(addr(arr) + i * element_size)
+                    node = new_binary(ND_DEREF, 
+                        new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), 
+                        new_binary(ND_MUL, new_node_num(get_element_size(lvar->type)), index_node)), NULL);
+                    return node;
                 }
-                node = new_binary(ND_DEREF, 
-                    new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), 
-                    new_binary(ND_MUL, new_node_num(8), index_node)), NULL);
-                return node;
             }
             if (lvar->type != NULL && lvar->type->ty == ARRAY) {
                 return new_binary(ND_ADDR, node, NULL);
@@ -867,33 +890,45 @@ Node *primary() {
             node->namelen = gvar->len;
             bool is_array = false;
             if (consume("[")) {
-                int dimension = 0;
-                Type *tmp_type = gvar->type;
-                while (tmp_type != NULL && tmp_type->ptr_to != NULL) {
-                    if(tmp_type->ty == ARRAY) dimension++;
-                    tmp_type = tmp_type->ptr_to;
-                }
-                tmp_type = gvar->type;
-                int ele_nums[dimension];
-                int now_offset = 1;
-                for (int i = 0; i < dimension; i++) {
-                    if(tmp_type->ty == ARRAY) {
-                        ele_nums[dimension - i - 1] = tmp_type->array_size;
-                        now_offset *= ele_nums[dimension - i - 1];
-                    }
-                    tmp_type = tmp_type->ptr_to;
-                }
-                Node *index_node = new_node_num(0);
-                for (int i = 0; i < dimension; i++) {
-                    now_offset /= ele_nums[i];
-                    index_node = new_binary(ND_ADD, index_node, new_binary(ND_MUL, equality(), new_node_num(now_offset)));
+                if (gvar->type->ty == PTR) {
+                    // Simple pointer indexing: *(ptr + index * element_size)
+                    Node *index = equality();
                     expect("]");
-                    consume("[");
+                    node = new_binary(ND_DEREF, 
+                        new_binary(ND_ADD, node, 
+                        new_binary(ND_MUL, index, new_node_num(get_element_size(gvar->type)))), NULL);
+                    return node;
+                } else {
+                    // Complex multi-dimensional array logic
+                    int dimension = 0;
+                    Type *tmp_type = gvar->type;
+                    while (tmp_type != NULL && tmp_type->ptr_to != NULL) {
+                        if(tmp_type->ty == ARRAY) dimension++;
+                        tmp_type = tmp_type->ptr_to;
+                    }
+                    tmp_type = gvar->type;
+                    int ele_nums[dimension];
+                    int now_offset = 1;
+                    for (int i = 0; i < dimension; i++) {
+                        if(tmp_type->ty == ARRAY) {
+                            ele_nums[dimension - i - 1] = tmp_type->array_size;
+                            now_offset *= ele_nums[dimension - i - 1];
+                        }
+                        tmp_type = tmp_type->ptr_to;
+                    }
+                    Node *index_node = new_node_num(0);
+                    for (int i = 0; i < dimension; i++) {
+                        now_offset /= ele_nums[i];
+                        index_node = new_binary(ND_ADD, index_node, new_binary(ND_MUL, equality(), new_node_num(now_offset)));
+                        expect("]");
+                        consume("[");
+                    }
+                    // For array types: *(addr(arr) + i * element_size)
+                    node = new_binary(ND_DEREF, 
+                        new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), 
+                        new_binary(ND_MUL, new_node_num(get_element_size(gvar->type)), index_node)), NULL);
+                    return node;
                 }
-                node = new_binary(ND_DEREF, 
-                    new_binary(ND_ADD, new_binary(ND_ADDR, node, NULL), 
-                    new_binary(ND_MUL, new_node_num(8), index_node)), NULL);
-                return node;
             }
             if (is_array) {
                 return node;
