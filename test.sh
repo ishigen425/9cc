@@ -222,6 +222,7 @@ assert 2 'test_file/preprocessor/testb.c'
 assert 45 'test_file/preprocessor/testc.c'
 assert 42 'test_file/preprocessor/testd.c'
 assert 200 'test_file/preprocessor/teste.c'
+assert 0 'test_file/typedef/testaa.c'
 
 echo OK
 
