@@ -110,8 +110,8 @@ typedef enum {
     TK_TRUE,     // true
     TK_FALSE,    // false
     TK_BOOL,     // bool
-    TK_DEFINE,  // #dfined
-    TK_DEFINE_END,  // #dfined end
+    TK_DEFINE,  // #defined
+    TK_DEFINE_END,  // #defined end
     TK_EXCLAMT, // !
 } TokenKind;
 
