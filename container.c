@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include "9cc.h"
 
 LVar *find_lvar(Token *tok) {
@@ -41,4 +42,12 @@ int find_defined_enum(Token *tok) {
         }
     }
     return -1;
+}
+
+Typedef *find_typedef(Token *tok) {
+    for (Typedef *td = defined_typedefs; td; td = td->next) {
+        if (td->len == tok->len && !memcmp(tok->str, td->name, td->len))
+            return td;
+    }
+    return NULL;
 }

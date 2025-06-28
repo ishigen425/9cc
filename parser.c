@@ -136,9 +136,29 @@ LVar *declared_lvar_undefined_type(Token *parent_tok){
             if(childe_struct_node == NULL) {
                 error_not_defined(child_tok->str, child_tok->len);
             }
-            lvar = declared_lvar(STRUCT, childe_struct_node->offset);
-            lvar->type->type_name = child_tok->str;
-            lvar->type->type_name_len = child_tok->len;
+        lvar = declared_lvar(STRUCT, childe_struct_node->offset);
+        lvar->type->type_name = child_tok->str;
+        lvar->type->type_name_len = child_tok->len;
+    }
+    } else if (token->kind == TK_INDENT && find_typedef(token)) {
+        Typedef *td = find_typedef(token);
+        token = token->next;
+        if (td->type->ty == STRUCT) {
+            Token search_tok = {0};
+            search_tok.str = td->type->type_name;
+            search_tok.len = td->type->type_name_len;
+            Node *st = find_defined_structs(&search_tok);
+            lvar = declared_lvar(STRUCT, st->offset);
+            lvar->type->type_name = td->type->type_name;
+            lvar->type->type_name_len = td->type->type_name_len;
+        } else if (td->type->ty == INT) {
+            lvar = declared_lvar(INT, 8);
+        } else if (td->type->ty == CHAR) {
+            lvar = declared_lvar(CHAR, 1);
+        } else if (td->type->ty == BOOL) {
+            lvar = declared_lvar(BOOL, 1);
+        } else {
+            lvar = declared_lvar(INT, 8);
         }
     } else if (consume_indent()) {
         lvar = declared_lvar(INT, 8);
@@ -223,6 +243,51 @@ void *defined_enum() {
     }
     Token *name = consume_indent();
     expect(";");
+}
+
+void parse_typedef() {
+    if (consume_kind(TK_ENUM)) {
+        defined_enum();
+        return;
+    }
+
+    Type *type = calloc(1, sizeof(Type));
+
+    if (consume_kind(TK_INT))
+        type->ty = INT;
+    else if (consume_kind(TK_CHAR))
+        type->ty = CHAR;
+    else if (consume_kind(TK_BOOL))
+        type->ty = BOOL;
+    else if (consume_kind(TK_VOID))
+        type->ty = VOID;
+    else if (consume_kind(TK_STRUCT)) {
+        Token *tok = consume_indent();
+        Node *st = find_defined_structs(tok);
+        if (!st)
+            error_not_defined(tok->str, tok->len);
+        type->ty = STRUCT;
+        type->type_name = tok->str;
+        type->type_name_len = tok->len;
+    } else {
+        error("not implemented typedef type");
+    }
+
+    while (consume("*")) {
+        Type *p = calloc(1, sizeof(Type));
+        p->ty = PTR;
+        p->ptr_to = type;
+        type = p;
+    }
+
+    Token *name_tok = consume_indent();
+    expect(";");
+    Typedef *td = calloc(1, sizeof(Typedef));
+    td->name = name_tok->str;
+    td->len = name_tok->len;
+    td->type = type;
+    td->next = defined_typedefs;
+    defined_typedefs = td;
 }
 
 Node *declared_gvar(Token *tok, TokenKind ty) {
@@ -409,6 +474,8 @@ Node *define_function_or_gvar() {
             defined_enum();
             return calloc(1, sizeof(Node));
         }
+        parse_typedef();
+        return calloc(1, sizeof(Node));
     }
     Type *top = calloc(1, sizeof(Type));
     top->ptr_to = calloc(1, sizeof(Type));
