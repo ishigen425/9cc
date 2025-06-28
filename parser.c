@@ -408,6 +408,23 @@ Node *define_function_or_gvar() {
         if (consume_kind(TK_ENUM)) {
             defined_enum();
             return calloc(1, sizeof(Node));
+        } else if (consume_kind(TK_STRUCT)) {
+            Token *tag = consume_indent();
+            if (!(token->kind == TK_RESERVED && token->len == 1 && *token->str == '{')) {
+                Token *alias = consume_indent();
+                expect(";");
+                StructAlias *al = calloc(1, sizeof(StructAlias));
+                al->tag = tag->str;
+                al->tag_len = tag->len;
+                al->alias = alias->str;
+                al->alias_len = alias->len;
+                al->next = struct_aliases;
+                struct_aliases = al;
+                return calloc(1, sizeof(Node));
+            } else {
+                // Currently we do not support typedef with struct body
+                // fall through to normal processing
+            }
         }
     }
     Type *top = calloc(1, sizeof(Type));

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include "9cc.h"
 
 LVar *find_lvar(Token *tok) {
@@ -30,6 +31,20 @@ Node *find_defined_structs(Token *tok) {
     for (Node *var = defined_structs; var; var = var->child) {
         if (var->namelen == tok->len && !memcmp(tok->str, var->name, var->namelen))
             return var;
+    }
+    for (StructAlias *al = struct_aliases; al; al = al->next) {
+        if ((al->tag_len == tok->len && !memcmp(tok->str, al->tag, al->tag_len)) ||
+            (al->alias_len == tok->len && !memcmp(tok->str, al->alias, al->alias_len))) {
+            for (Node *var = defined_structs; var; var = var->child) {
+                if (var->namelen == al->tag_len && !memcmp(al->tag, var->name, al->tag_len))
+                    return var;
+            }
+            Node *node = calloc(1, sizeof(Node));
+            node->kind = ND_STRUCTDEF;
+            node->name = al->tag;
+            node->namelen = al->tag_len;
+            return node;
+        }
     }
     return NULL;
 }

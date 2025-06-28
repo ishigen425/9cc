@@ -147,6 +147,16 @@ struct EnumDef {
     EnumDef *next;
 };
 
+typedef struct StructAlias StructAlias;
+
+struct StructAlias {
+    char *tag;
+    int tag_len;
+    char *alias;
+    int alias_len;
+    StructAlias *next;
+};
+
 void tokenize(char *p);
 Node *stmt();
 Node *assign();
@@ -189,6 +199,7 @@ GVar *globals;
 GVar *literals;
 Node *defined_structs;
 EnumDef *defined_enums;
+StructAlias *struct_aliases;
 
 LVar *find_lvar(Token *tok);
 GVar *find_gvar(Token *tok);
