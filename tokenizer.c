@@ -218,7 +218,7 @@ char *tokenize_until_end_char(char *p, char *end_char) {
             continue;
         }
 
-        if (startswith(p, "return ")) {
+        if (startswith(p, "return ") || startswith(p, "return;")) {
             cur = new_token(TK_RETURN, cur, p, 6);
             p += 6;
             continue;

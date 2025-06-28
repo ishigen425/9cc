@@ -616,7 +616,14 @@ Node *stmt() {
     } else if (consume_kind(TK_RETURN)) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
-        node->lhs = expr();
+        // Check if this is a void return (return;) or a value return (return expr;)
+        if (token->kind == TK_RESERVED && token->len == 1 && *token->str == ';') {
+            // Void return - no expression
+            node->lhs = NULL;
+        } else {
+            // Regular return with expression
+            node->lhs = expr();
+        }
         expect(";");
         return node;
     } else if (consume_kind(TK_INT)) {

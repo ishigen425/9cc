@@ -73,8 +73,14 @@ void gen(Node *node) {
         printf("    push rdi\n");
         return;
     case ND_RETURN:
-        gen(node->lhs);
-        printf("    pop rax\n");
+        if (node->lhs != NULL) {
+            // Return with value
+            gen(node->lhs);
+            printf("    pop rax\n");
+        } else {
+            // Void return - no value to pop
+            printf("    mov rax, 0\n");  // Set return value to 0 for consistency
+        }
         printf("    mov rsp, rbp\n");
         printf("    pop rbp\n");
         printf("    ret\n");
