@@ -8,6 +8,7 @@
 
 int literals_def_idx = 0;
 int _offset = 0;
+TypedefName *typedefs = NULL;
 
 int get_next_offset(int val) {
     if (locals != NULL) {
@@ -60,6 +61,55 @@ int get_dimension(LVar *lvar) {
 // Function to allocate memory for a new Type object
 Type *new_type() {
     return calloc(1, sizeof(Type));
+}
+
+Type *copy_type(Type *src) {
+    if (!src) return NULL;
+    Type *dest = new_type();
+    dest->ty = src->ty;
+    dest->type_name = src->type_name;
+    dest->type_name_len = src->type_name_len;
+    dest->array_size = src->array_size;
+    dest->ptr_to = copy_type(src->ptr_to);
+    return dest;
+}
+
+Type *parse_type_base(Token *parent_tok, bool allow_undef) {
+    Type *type = new_type();
+    if (consume_kind(TK_INT)) {
+        type->ty = INT;
+        return type;
+    } else if (consume_kind(TK_CHAR)) {
+        type->ty = CHAR;
+        return type;
+    } else if (consume_kind(TK_BOOL)) {
+        type->ty = BOOL;
+        return type;
+    } else if (consume_kind(TK_VOID)) {
+        type->ty = VOID;
+        return type;
+    } else if (consume_kind(TK_STRUCT)) {
+        Token *tok = consume_indent();
+        type->ty = STRUCT;
+        type->type_name = tok->str;
+        type->type_name_len = tok->len;
+        if (!allow_undef) {
+            if (parent_tok && tok->len == parent_tok->len && !memcmp(tok->str, parent_tok->str, tok->len)) {
+                // self reference allowed
+                ;
+            } else if (find_defined_structs(tok) == NULL) {
+                error_not_defined(tok->str, tok->len);
+            }
+        }
+        return type;
+    } else if (token->kind == TK_INDENT) {
+        TypedefName *td = find_typedef(token);
+        if (td) {
+            token = token->next;
+            return copy_type(td->type);
+        }
+    }
+    return NULL;
 }
 
 LVar *declared_lvar(TypeKind kind, int kind_size){
@@ -124,32 +174,28 @@ void error_not_self_pointer(LVar *lvar) {
 
 LVar *declared_lvar_undefined_type(Token *parent_tok){
     LVar *lvar;
-    if (consume_kind(TK_INT)) {
-        lvar = declared_lvar(INT, 8);
-    } else if (consume_kind(TK_CHAR)) {
-        lvar = declared_lvar(CHAR, 1);
-    } else if (consume_kind(TK_BOOL)) {
-        lvar = declared_lvar(BOOL, 1);
-    } else if (consume_kind(TK_VOID)) {
-        lvar = declared_lvar(VOID, 8);
-    } else if (consume_kind(TK_STRUCT)) {
-        Token *child_tok = consume_indent();
-        Node *childe_struct_node = find_defined_structs(child_tok);
-        if (parent_tok != NULL && child_tok->len == parent_tok->len && !memcmp(child_tok->str, parent_tok->str, child_tok->len)) {
-            // allow self pointer exceptionally
-            lvar = declared_lvar(STRUCT, 8);
-            if(lvar->type->ty != PTR) {
-                error_not_self_pointer(lvar);
+    Type *base = parse_type_base(parent_tok, false);
+    if (base) {
+        if (base->ty == STRUCT) {
+            Token tmp; tmp.str = base->type_name; tmp.len = base->type_name_len;
+            Node *childe_struct_node = find_defined_structs(&tmp);
+            if (parent_tok != NULL && base->type_name_len == parent_tok->len && !memcmp(base->type_name, parent_tok->str, base->type_name_len)) {
+                lvar = declared_lvar(STRUCT, 8);
+                if(lvar->type->ty != PTR) {
+                    error_not_self_pointer(lvar);
+                }
+                lvar->type->type_name = base->type_name;
+                lvar->type->type_name_len = base->type_name_len;
+            } else {
+                if(childe_struct_node == NULL) {
+                    error_not_defined(base->type_name, base->type_name_len);
+                }
+                lvar = declared_lvar(STRUCT, childe_struct_node->offset);
+                lvar->type->type_name = base->type_name;
+                lvar->type->type_name_len = base->type_name_len;
             }
-            lvar->type->type_name = child_tok->str;
-            lvar->type->type_name_len = child_tok->len;
         } else {
-            if(childe_struct_node == NULL) {
-                error_not_defined(child_tok->str, child_tok->len);
-            }
-            lvar = declared_lvar(STRUCT, childe_struct_node->offset);
-            lvar->type->type_name = child_tok->str;
-            lvar->type->type_name_len = child_tok->len;
+            lvar = declared_lvar(base->ty, get_size(base));
         }
     } else if (consume_indent()) {
         lvar = declared_lvar(INT, 8);
@@ -233,6 +279,24 @@ void *defined_enum() {
         expect(",");
     }
     Token *name = consume_indent();
+    expect(";");
+}
+
+void parse_typedef() {
+    Type *type = parse_type_base(NULL, true);
+    while (consume("*")) {
+        Type *ptr = new_type();
+        ptr->ty = PTR;
+        ptr->ptr_to = type;
+        type = ptr;
+    }
+    Token *alias = consume_indent();
+    TypedefName *td = calloc(1, sizeof(TypedefName));
+    td->name = alias->str;
+    td->len = alias->len;
+    td->type = type;
+    td->next = typedefs;
+    typedefs = td;
     expect(";");
 }
 
@@ -404,6 +468,14 @@ Node *define_function_or_gvar() {
     _offset = 0;
     char t[64];
     TypeKind ty;
+    if (consume_kind(TK_TYPEDEF)) {
+        if (consume_kind(TK_ENUM)) {
+            defined_enum();
+            return calloc(1, sizeof(Node));
+        }
+        parse_typedef();
+        return calloc(1, sizeof(Node));
+    }
     if (consume_kind(TK_INT))
         ty = INT;
     if (consume_kind(TK_CHAR))

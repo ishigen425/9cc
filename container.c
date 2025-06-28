@@ -57,3 +57,11 @@ int find_defined_enum(Token *tok) {
     }
     return -1;
 }
+
+TypedefName *find_typedef(Token *tok) {
+    for (TypedefName *td = typedefs; td; td = td->next) {
+        if (td->len == tok->len && !memcmp(tok->str, td->name, td->len))
+            return td;
+    }
+    return NULL;
+}

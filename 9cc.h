@@ -157,6 +157,15 @@ struct StructAlias {
     StructAlias *next;
 };
 
+typedef struct TypedefName TypedefName;
+
+struct TypedefName {
+    char *name;
+    int len;
+    Type *type;
+    TypedefName *next;
+};
+
 void tokenize(char *p);
 Node *stmt();
 Node *assign();
@@ -200,6 +209,7 @@ GVar *literals;
 Node *defined_structs;
 EnumDef *defined_enums;
 StructAlias *struct_aliases;
+TypedefName *typedefs;
 
 LVar *find_lvar(Token *tok);
 GVar *find_gvar(Token *tok);
@@ -207,3 +217,4 @@ GVar *find_gvar_literals(Token *tok);
 Node *find_defined_structs(Token *tok);
 int get_struct_node_offset(Node *defined_struct_node, Token *tok);
 int find_defined_enum(Token *tok);
+TypedefName *find_typedef(Token *tok);
