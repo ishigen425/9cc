@@ -30,6 +30,7 @@ int get_size(Type *type) {
     if (type->ty == PTR) return 8;
     if (type->ty == ARRAY) return 8;
     if (type->ty == STRUCT) return 8;
+    if (type->ty == VOID) return 8;
     return 8;
 }
 
@@ -118,6 +119,8 @@ LVar *declared_lvar_undefined_type(Token *parent_tok){
         lvar = declared_lvar(CHAR, 1);
     } else if (consume_kind(TK_BOOL)) {
         lvar = declared_lvar(BOOL, 1);
+    } else if (consume_kind(TK_VOID)) {
+        lvar = declared_lvar(VOID, 8);
     } else if (consume_kind(TK_STRUCT)) {
         Token *child_tok = consume_indent();
         Node *childe_struct_node = find_defined_structs(child_tok);
@@ -396,6 +399,8 @@ Node *define_function_or_gvar() {
         ty = CHAR;
     if (consume_kind(TK_BOOL))
         ty = BOOL;
+    if (consume_kind(TK_VOID))
+        ty = VOID;
     if (consume_kind(TK_STRUCT)) {
         ty = STRUCT;
     }
@@ -719,6 +724,45 @@ Node *struct_ref(Node *defined_struct_node, Token *left_token) {
 
 Node *primary() {
     if (consume("(")) {
+        // Check if this is a cast expression: (type *)
+        Token *save_token = token;  // Save current position
+        
+        // Try to parse a type
+        Type *cast_type = NULL;
+        if (consume_kind(TK_VOID) || consume_kind(TK_INT) || consume_kind(TK_CHAR) || consume_kind(TK_BOOL)) {
+            cast_type = calloc(1, sizeof(Type));
+            
+            // Handle void type
+            if (save_token->next->kind == TK_VOID) {
+                cast_type->ty = VOID;
+            } else if (save_token->next->kind == TK_INT) {
+                cast_type->ty = INT;
+            } else if (save_token->next->kind == TK_CHAR) {
+                cast_type->ty = CHAR;
+            } else if (save_token->next->kind == TK_BOOL) {
+                cast_type->ty = BOOL;
+            }
+            
+            // Check for pointer indicator
+            if (consume("*")) {
+                Type *ptr_type = calloc(1, sizeof(Type));
+                ptr_type->ty = PTR;
+                ptr_type->ptr_to = cast_type;
+                cast_type = ptr_type;
+                
+                if (consume(")")) {
+                    // This is a cast expression, parse the operand
+                    Node *cast_node = calloc(1, sizeof(Node));
+                    cast_node->kind = ND_CAST;
+                    cast_node->type = cast_type;
+                    cast_node->lhs = unary();  // Parse the expression being cast
+                    return cast_node;
+                }
+            }
+        }
+        
+        // Not a cast, restore position and parse as regular expression
+        token = save_token;
         Node *node = expr();
         expect(")");
         return node;

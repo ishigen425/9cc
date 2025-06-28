@@ -242,6 +242,12 @@ char *tokenize_until_end_char(char *p, char *end_char) {
             continue;
         }
 
+        if (startswith(p, "void ") || startswith(p, "void)") || startswith(p, "void*")) {
+            cur = new_token(TK_VOID, cur, p, 4);
+            p += 4;
+            continue;
+        }
+
         if (startswith(p, "//")) {
             p += 2;
             while (*p != '\n'){

@@ -248,6 +248,11 @@ void gen(Node *node) {
         printf("    xor rax, 1\n");
         printf("    push rax\n");
         return;
+    case ND_CAST:
+        // For now, just generate the expression being cast
+        // Cast to void pointer is essentially a no-op
+        gen(node->lhs);
+        return;
     }
 
     gen(node->lhs);
