@@ -147,6 +147,15 @@ struct EnumDef {
     EnumDef *next;
 };
 
+typedef struct Typedef Typedef;
+
+struct Typedef {
+    Typedef *next;
+    char *name;
+    int len;
+    Type *type;
+};
+
 void tokenize(char *p);
 Node *stmt();
 Node *assign();
@@ -189,6 +198,7 @@ GVar *globals;
 GVar *literals;
 Node *defined_structs;
 EnumDef *defined_enums;
+Typedef *defined_typedefs;
 
 LVar *find_lvar(Token *tok);
 GVar *find_gvar(Token *tok);
@@ -196,3 +206,4 @@ GVar *find_gvar_literals(Token *tok);
 Node *find_defined_structs(Token *tok);
 int get_struct_node_offset(Node *defined_struct_node, Token *tok);
 int find_defined_enum(Token *tok);
+Typedef *find_typedef(Token *tok);
