@@ -110,7 +110,7 @@ void error_not_self_pointer(LVar *lvar) {
     error_at(lvar->name, user_input, "%s is not a self pointer.", t);
 }
 
-LVar *declared_lvar_undefiend_type(Token *parent_tok){
+LVar *declared_lvar_undefined_type(Token *parent_tok){
     LVar *lvar;
     if (consume_kind(TK_INT)) {
         lvar = declared_lvar(INT, 8);
@@ -180,7 +180,7 @@ Node *defined_struct(Token *tok) {
     Node *variabls = NULL;
     expect("{");
     while (!consume("}")) {
-        LVar *lvar = declared_lvar_undefiend_type(tok);
+        LVar *lvar = declared_lvar_undefined_type(tok);
         Node *lvar_node = calloc(1, sizeof(Node));
         lvar_node->kind = ND_LVAR;
         lvar_node->offset = offset;
@@ -426,7 +426,7 @@ Node *define_function_or_gvar() {
             if(argnum >= 6)
                 error("not implementation error!");
             // 引数をローカル変数と同様に扱う
-            LVar *lvar = declared_lvar_undefiend_type(NULL);
+            LVar *lvar = declared_lvar_undefined_type(NULL);
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             node->offset = lvar->offset;
