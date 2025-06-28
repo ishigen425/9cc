@@ -59,7 +59,7 @@ char *memcpy_char(char *src, int len) {
 
 void deep_copy(Token *src_token, Token *dest_token) {
     dest_token->kind = src_token->kind;
-    dest_token->str = src_token->str, src_token->len;
+    dest_token->str = src_token->str;
     dest_token->len = src_token->len;
     dest_token->next = src_token->next;
     dest_token->val = src_token->val;
